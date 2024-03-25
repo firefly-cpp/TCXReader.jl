@@ -1,0 +1,4 @@
+name = "TCXreader"
+uuid = "1acf2333-b1bd-424d-862d-25e89a4f23c1"
+authors = ["Iztok Fister Jr. <iztok@iztok.xyz>"]
+version = "0.1.0"
