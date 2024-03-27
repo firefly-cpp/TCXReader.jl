@@ -2,3 +2,6 @@ name = "TCXreader"
 uuid = "1acf2333-b1bd-424d-862d-25e89a4f23c1"
 authors = ["Iztok Fister Jr. <iztok@iztok.xyz>"]
 version = "0.1.0"
+
+[deps]
+EzXML = "8f5d6c58-4d21-5cfd-889c-e3ad7ee6a615"
