@@ -3,10 +3,12 @@ module TCXreader
 include("TCXTrackPoint.jl")
 include("TCXAuthor.jl")
 include("TCXLap.jl")
+include("TCXActivity.jl")
 
 using .TrackPoint: TCXTrackPoint
 using .Author: TCXAuthor, BuildVersion
 using .Lap: TCXLap
+using .Activity: TCXActivity, DeviceInfo
 
 using EzXML
 using Dates
@@ -51,7 +53,7 @@ function parseTCXLap(node::EzXML.Node)::TCXLap
     avgSpeed = parseOptionalFloat(node, ".//ns3:LX/ns3:AvgSpeed")
 
     trackPoints = [parseTCXTrackPoint(tp) for tp in findall(".//g:Trackpoint", node, NS_MAP)]
-    
+
     return TCXLap(startTime, totalTimeSeconds=totalTimeSeconds, distanceMeters=distanceMeters, maximumSpeed=maximumSpeed,
         calories=calories, averageHeartRateBpm=averageHeartRateBpm, maximumHeartRateBpm=maximumHeartRateBpm,
         intensity=intensity, cadence=cadence, trackPoints=trackPoints, triggerMethod=triggerMethod, avgSpeed=avgSpeed)
@@ -90,18 +92,44 @@ function parseTCXAuthor(doc::EzXML.Document)
 
         return TCXAuthor(name, build, langID, partNumber)
     else
-        return TCXAuthor() 
+        return TCXAuthor()
+    end
+end
+
+function parseDeviceInfo(doc::EzXML.Document)
+    creatorNode = findfirst(".//g:Creator", doc.root, NS_MAP)
+    if creatorNode !== nothing
+        name = nodecontent(findfirst(".//g:Name", creatorNode, NS_MAP))
+        unitId = nodecontent(findfirst(".//g:UnitId", creatorNode, NS_MAP))
+        productId = parseOptionalInt(creatorNode, ".//g:ProductID")
+        versionMajor = parseOptionalInt(creatorNode, ".//g:Version/g:VersionMajor")
+        versionMinor = parseOptionalInt(creatorNode, ".//g:Version/g:VersionMinor")
+        version = versionMajor !== nothing && versionMinor !== nothing ? "$versionMajor.$versionMinor" : ""
+        return DeviceInfo(name, unitId, productId, version)
+    else
+        return DeviceInfo()
     end
 end
 
 function loadTCXFile(filepath::String)
     doc = readxml(filepath)
-
     parsed_author = parseTCXAuthor(doc)
-    lapNodes = findall(".//g:Lap", doc.root, NS_MAP)
-    parsed_laps = [parseTCXLap(lap) for lap in lapNodes]
 
-    return parsed_author, parsed_laps
+    activitiesNode = findfirst(".//g:Activities", doc.root, NS_MAP)
+    activities = []
+
+    for activityNode in findall(".//g:Activity", activitiesNode, NS_MAP)
+        sport = activityNode["Sport"]
+        idNode = findfirst("g:Id", activityNode, NS_MAP)
+        id = idNode !== nothing ? parseDateTime(nodecontent(idNode)) : DateTime(1, 1, 1)
+        lapNodes = findall(".//g:Lap", activityNode, NS_MAP)
+        parsed_laps = [parseTCXLap(lap) for lap in lapNodes]
+        device_info = parseDeviceInfo(doc)
+
+        push!(activities, TCXActivity(sport, id, parsed_laps, device_info))
+    end
+
+    return parsed_author, activities
 end
 
 end
