@@ -2,9 +2,11 @@ module TCXreader
 
 include("TCXTrackPoint.jl")
 include("TCXAuthor.jl")
+include("TCXLap.jl")
 
 using .TrackPoint: TCXTrackPoint
 using .Author: TCXAuthor, BuildVersion
+using .Lap: TCXLap
 
 using EzXML
 using Dates
@@ -16,58 +18,90 @@ const NS_MAP = Dict(
     "ns3" => "http://www.garmin.com/xmlschemas/ActivityExtension/v2"
 )
 
-function parseBuildVersion(node::EzXML.Node)
-    versionMajor = parse(Int, nodecontent(findfirst(".//g:VersionMajor", node, NS_MAP)))
-    versionMinor = parse(Int, nodecontent(findfirst(".//g:VersionMinor", node, NS_MAP)))
-    buildMajor = parse(Int, nodecontent(findfirst(".//g:BuildMajor", node, NS_MAP)))
-    buildMinor = parse(Int, nodecontent(findfirst(".//g:BuildMinor", node, NS_MAP)))
-    
-    return BuildVersion(versionMajor, versionMinor, buildMajor, buildMinor)
+function parseOptionalFloat(node, path)
+    valueNode = findfirst(path, node, NS_MAP)
+    valueNode !== nothing ? parse(Float64, nodecontent(valueNode)) : nothing
 end
 
-function parseTCXAuthor(doc::EzXML.Document)
-    authorNode = findfirst(".//g:Author", doc.root, NS_MAP)
-    
-    if authorNode !== nothing
-        name = nodecontent(findfirst(".//g:Name", authorNode, NS_MAP))
-        buildNode = findfirst(".//g:Build", authorNode, NS_MAP)
-        build = buildNode !== nothing ? parseBuildVersion(buildNode) : BuildVersion(0, 0, 0, 0)
-        langID = nodecontent(findfirst(".//g:LangID", authorNode, NS_MAP))
-        partNumber = nodecontent(findfirst(".//g:PartNumber", authorNode, NS_MAP))
-        
-        return TCXAuthor(name, build, langID, partNumber)
-    else
-        return TCXAuthor()  # Return an empty author if not found
-    end
+function parseOptionalInt(node, path)
+    valueNode = findfirst(path, node, NS_MAP)
+    valueNode !== nothing ? parse(Int, nodecontent(valueNode)) : nothing
+end
+
+function parseOptionalString(node, path)
+    valueNode = findfirst(path, node, NS_MAP)
+    valueNode !== nothing ? nodecontent(valueNode) : ""
 end
 
 function parseDateTime(timeStr::String)
     isempty(timeStr) ? DateTime(1, 1, 1) : DateTime(timeStr, dateformat"yyyy-mm-ddTHH:MM:SS.sssZ")
 end
 
-function parseValue(node::Union{Nothing,EzXML.Node}, parser::Function=identity)
-    node === nothing ? nothing : parser(nodecontent(node))
+function parseTCXLap(node::EzXML.Node)::TCXLap
+    startTime = parseDateTime(node["StartTime"])
+    totalTimeSeconds = parseOptionalFloat(node, ".//g:TotalTimeSeconds")
+    distanceMeters = parseOptionalFloat(node, ".//g:DistanceMeters")
+    maximumSpeed = parseOptionalFloat(node, ".//g:MaximumSpeed")
+    calories = parseOptionalInt(node, ".//g:Calories")
+    averageHeartRateBpm = parseOptionalInt(node, ".//g:AverageHeartRateBpm/g:Value")
+    maximumHeartRateBpm = parseOptionalInt(node, ".//g:MaximumHeartRateBpm/g:Value")
+    intensity = parseOptionalString(node, ".//g:Intensity")
+    cadence = parseOptionalInt(node, ".//g:Cadence")
+    triggerMethod = parseOptionalString(node, ".//g:TriggerMethod")
+    avgSpeed = parseOptionalFloat(node, ".//ns3:LX/ns3:AvgSpeed")
+
+    trackPoints = [parseTCXTrackPoint(tp) for tp in findall(".//g:Trackpoint", node, NS_MAP)]
+    
+    return TCXLap(startTime, totalTimeSeconds=totalTimeSeconds, distanceMeters=distanceMeters, maximumSpeed=maximumSpeed,
+        calories=calories, averageHeartRateBpm=averageHeartRateBpm, maximumHeartRateBpm=maximumHeartRateBpm,
+        intensity=intensity, cadence=cadence, trackPoints=trackPoints, triggerMethod=triggerMethod, avgSpeed=avgSpeed)
 end
 
-function parseTCXTrackPoint(node::EzXML.Node)    
+function parseTCXTrackPoint(node::EzXML.Node)
     time = parseDateTime(nodecontent(findfirst(".//g:Time", node, NS_MAP)))
-    latitude = parseValue(findfirst(".//g:Position/g:LatitudeDegrees", node, NS_MAP), x -> parse(Float64, x))
-    longitude = parseValue(findfirst(".//g:Position/g:LongitudeDegrees", node, NS_MAP), x -> parse(Float64, x))
-    altitude_meters = parseValue(findfirst(".//g:AltitudeMeters", node, NS_MAP), x -> parse(Float64, x))
-    distance_meters = parseValue(findfirst(".//g:DistanceMeters", node, NS_MAP), x -> parse(Float64, x))
-    heart_rate_bpm = parseValue(findfirst(".//g:HeartRateBpm/g:Value", node, NS_MAP), x -> parse(Int, x))
-    speed = parseValue(findfirst(".//ns3:TPX/ns3:Speed", node, NS_MAP), x -> parse(Float64, x))
+    latitude = parseOptionalFloat(node, ".//g:Position/g:LatitudeDegrees")
+    longitude = parseOptionalFloat(node, ".//g:Position/g:LongitudeDegrees")
+    altitude_meters = parseOptionalFloat(node, ".//g:AltitudeMeters")
+    distance_meters = parseOptionalFloat(node, ".//g:DistanceMeters")
+    heart_rate_bpm = parseOptionalInt(node, ".//g:HeartRateBpm/g:Value")
+    speed = parseOptionalFloat(node, ".//ns3:TPX/ns3:Speed")
 
     return TCXTrackPoint(time, latitude, longitude, altitude_meters, distance_meters, heart_rate_bpm, speed)
+end
+
+function parseBuildVersion(node::EzXML.Node)
+    versionMajor = parse(Int, nodecontent(findfirst(".//g:VersionMajor", node, NS_MAP)))
+    versionMinor = parse(Int, nodecontent(findfirst(".//g:VersionMinor", node, NS_MAP)))
+    buildMajor = parse(Int, nodecontent(findfirst(".//g:BuildMajor", node, NS_MAP)))
+    buildMinor = parse(Int, nodecontent(findfirst(".//g:BuildMinor", node, NS_MAP)))
+
+    return BuildVersion(versionMajor, versionMinor, buildMajor, buildMinor)
+end
+
+function parseTCXAuthor(doc::EzXML.Document)
+    authorNode = findfirst(".//g:Author", doc.root, NS_MAP)
+
+    if authorNode !== nothing
+        name = nodecontent(findfirst(".//g:Name", authorNode, NS_MAP))
+        buildNode = findfirst(".//g:Build", authorNode, NS_MAP)
+        build = buildNode !== nothing ? parseBuildVersion(buildNode) : BuildVersion(0, 0, 0, 0)
+        langID = nodecontent(findfirst(".//g:LangID", authorNode, NS_MAP))
+        partNumber = nodecontent(findfirst(".//g:PartNumber", authorNode, NS_MAP))
+
+        return TCXAuthor(name, build, langID, partNumber)
+    else
+        return TCXAuthor() 
+    end
 end
 
 function loadTCXFile(filepath::String)
     doc = readxml(filepath)
 
     parsed_author = parseTCXAuthor(doc)
-    parsed_trackpoints = [parseTCXTrackPoint(tp) for tp in findall(".//g:Trackpoint", doc.root, NS_MAP)]
+    lapNodes = findall(".//g:Lap", doc.root, NS_MAP)
+    parsed_laps = [parseTCXLap(lap) for lap in lapNodes]
 
-    return parsed_author, parsed_trackpoints
+    return parsed_author, parsed_laps
 end
 
 end

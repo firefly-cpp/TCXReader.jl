@@ -5,8 +5,13 @@ using Dates
 export TCXAuthor, BuildVersion
 
 """
-    BuildVersion(versionMajor, versionMinor, buildMajor, buildMinor)
-Holds version and build information for the TCX Author's software.
+Constructs version information for the TCX file's author.
+
+# Parameters
+- `versionMajor`: Major version number.
+- `versionMinor`: Minor version number.
+- `buildMajor`: Major build number.
+- `buildMinor`: Minor build number.
 """
 struct BuildVersion
     versionMajor::Int
@@ -17,8 +22,15 @@ struct BuildVersion
 end
 
 """
-    TCXAuthor(name, build, langID, partNumber)
-Represents the author of the TCX file with identification and build information.
+    TCXAuthor(name::String, build::BuildVersion, langID::String, partNumber::String)
+
+Represents the author of the TCX file.
+
+# Fields
+- `name`: Name of the authoring application or device.
+- `build`: A `BuildVersion` struct detailing the software build version.
+- `langID`: Language ID of the authoring software.
+- `partNumber`: Part number of the authoring software or device.
 """
 struct TCXAuthor
     name::String
