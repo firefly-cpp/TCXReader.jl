@@ -1,5 +1,7 @@
 using Test
-using .TCXreader
+using TCXreader
+using Dates
+using TCXActivity
 
 @testset "TCXActivity Tests" begin
     activity = TCXActivity("Biking", DateTime(2021, 1, 1, 12), [], DeviceInfo("Garmin", "123", 456, "1.0"))

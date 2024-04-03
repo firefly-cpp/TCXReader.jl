@@ -1,5 +1,7 @@
 using Test
-using .TCXreader
+using TCXreader
+using Dates
+using TCXTrackPoint
 
 @testset "TCXTrackPoint Tests" begin
     tp = TCXTrackPoint(DateTime(2021, 1, 1, 12), 45.0, 13.0, 100.0, 1000.0, 150, 2.5)

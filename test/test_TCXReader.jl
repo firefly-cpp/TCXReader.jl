@@ -1,6 +1,8 @@
 using Test
-using .TCXReader
+using TCXreader
 using EzXML
+using Dates
+using TCXTrackPoint
 
 @testset "TCXReader Parsing Tests" begin
     @testset "parseTCXTrackPoint" begin

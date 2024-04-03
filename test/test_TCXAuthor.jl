@@ -1,5 +1,6 @@
 using Test
-using .TCXreader
+using TCXreader
+using TCXAuthor
 
 @testset "TCXAuthor Tests" begin
     author = TCXAuthor("Test Author", BuildVersion(1, 2, 3, 4), "EN", "123456")

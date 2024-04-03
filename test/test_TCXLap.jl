@@ -1,5 +1,8 @@
 using Test
-using .TCXreader
+using TCXreader
+using Dates
+using TCXLap
+using TCXTrackPoint
 
 @testset "TCXLap Tests" begin
     start_time = DateTime(2021, 1, 1, 12)

@@ -1,4 +1,4 @@
-module TCXReader
+module TCXreader
 
 using Dates
 
