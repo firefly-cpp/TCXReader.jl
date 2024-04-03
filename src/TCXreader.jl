@@ -78,7 +78,7 @@ end
 
 function parseTCXAuthor(doc::EzXML.Document)
     authorNode = findfirst(".//g:Author", doc.root, NS_MAP)
-
+    
     if authorNode !== nothing
         name = nodecontent(findfirst(".//g:Name", authorNode, NS_MAP))
         buildNode = findfirst(".//g:Build", authorNode, NS_MAP)
