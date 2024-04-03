@@ -1,9 +1,3 @@
-module Author
-
-using Dates
-
-export TCXAuthor, BuildVersion
-
 """
 Constructs version information for the TCX file's author.
 
@@ -46,6 +40,4 @@ end
 
 function Base.show(io::IO, author::TCXAuthor)
     print(io, "TCXAuthor(Name=$(author.name), Build=$(author.build), LangID=$(author.langID), PartNumber=$(author.partNumber))")
-end
-
 end

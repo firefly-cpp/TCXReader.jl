@@ -1,10 +1,3 @@
-module Activity
-
-using Dates
-using ..Lap: TCXLap
-
-export TCXActivity, DeviceInfo
-
 """
 Represents the device that recorded the TCX activity, encapsulating details such as the name, unit ID, product ID, and version.
 
@@ -47,6 +40,4 @@ end
 
 function Base.show(io::IO, activity::TCXActivity)
     print(io, "TCXActivity(Sport=$(activity.sport), ID=$(activity.id), Laps=[...$(length(activity.laps)) items], Device=$(activity.device))")
-end
-
 end

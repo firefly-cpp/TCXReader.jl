@@ -1,9 +1,3 @@
-module TrackPoint
-
-using Dates
-
-export TCXTrackPoint
-
 """
 Represents a single track point in a TCX file, encapsulating geographical, temporal, and physiological data.
 
@@ -44,6 +38,4 @@ function Base.:(==)(a::TCXTrackPoint, b::TCXTrackPoint)
     return a.time == b.time && a.latitude == b.latitude && a.longitude == b.longitude &&
            a.altitude_meters == b.altitude_meters && a.distance_meters == b.distance_meters &&
            a.heart_rate_bpm == b.heart_rate_bpm && a.speed == b.speed
-end
-
 end

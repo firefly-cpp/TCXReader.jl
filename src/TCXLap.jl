@@ -1,10 +1,3 @@
-module Lap
-
-using Dates
-using ..TrackPoint: TCXTrackPoint
-
-export TCXLap
-
 """
 Represents a single lap within a TCX file, encapsulating temporal, physiological, and spatial metrics through track points, along with an optional average speed obtained from extensions.
 
@@ -48,6 +41,4 @@ end
 
 function Base.show(io::IO, lap::TCXLap)
     print(io, "TCXLap(StartTime=$(lap.startTime), TotalTimeSeconds=$(lap.totalTimeSeconds), DistanceMeters=$(lap.distanceMeters), MaximumSpeed=$(lap.maximumSpeed), Calories=$(lap.calories), AverageHeartRateBpm=$(lap.averageHeartRateBpm), MaximumHeartRateBpm=$(lap.maximumHeartRateBpm), Intensity=$(lap.intensity), Cadence=$(lap.cadence), AvgSpeed=$(lap.avgSpeed), TrackPoints=[...$(length(lap.trackPoints)) items], TriggerMethod=$(lap.triggerMethod))")
-end
-
 end

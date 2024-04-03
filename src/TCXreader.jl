@@ -2,19 +2,14 @@ module TCXreader
 
 using Dates
 
+using EzXML
+
+export TCXTrackPoint, BuildVersion, TCXAuthor, TCXLap, TCXActivity, DeviceInfo, loadTCXFile, parseTCXAuthor, parseTCXLap, parseTCXTrackPoint, parseDeviceInfo
+
 include("TCXTrackPoint.jl")
 include("TCXAuthor.jl")
 include("TCXLap.jl")
 include("TCXActivity.jl")
-
-using .TrackPoint: TCXTrackPoint
-using .Author: TCXAuthor, BuildVersion
-using .Lap: TCXLap
-using .Activity: TCXActivity, DeviceInfo
-
-using EzXML
-
-export loadTCXFile
 
 const NS_MAP = Dict(
     "g" => "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2",
