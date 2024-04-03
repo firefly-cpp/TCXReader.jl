@@ -1,6 +1,6 @@
-include("TCXreader.jl")
+include("TCXReader.jl")
 
-using .TCXreader
+using .TCXReader
 using CSV, DataFrames
 
 function main()

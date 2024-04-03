@@ -1,4 +1,6 @@
-module TCXreader
+module TCXReader
+
+using Dates
 
 include("TCXTrackPoint.jl")
 include("TCXAuthor.jl")
@@ -11,7 +13,6 @@ using .Lap: TCXLap
 using .Activity: TCXActivity, DeviceInfo
 
 using EzXML
-using Dates
 
 export loadTCXFile
 
