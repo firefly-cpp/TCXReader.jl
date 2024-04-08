@@ -1,8 +1,6 @@
 module TCXreader
 
-using Dates
-
-using EzXML
+using EzXML, CSV, DataFrames, Dates
 
 export TCXTrackPoint, BuildVersion, TCXAuthor, TCXLap, TCXActivity, DeviceInfo, loadTCXFile, parseTCXAuthor, parseTCXLap, parseTCXTrackPoint, parseDeviceInfo
 
@@ -78,7 +76,7 @@ end
 
 function parseTCXAuthor(doc::EzXML.Document)
     authorNode = findfirst(".//g:Author", doc.root, NS_MAP)
-    
+
     if authorNode !== nothing
         name = nodecontent(findfirst(".//g:Name", authorNode, NS_MAP))
         buildNode = findfirst(".//g:Build", authorNode, NS_MAP)
@@ -107,12 +105,76 @@ function parseDeviceInfo(doc::EzXML.Document)
     end
 end
 
-function loadTCXFile(filepath::String)
+function exportCSV(author::TCXAuthor, activities::Vector{TCXActivity}, csv_filepath::String)
+    df = DataFrame(
+        AuthorName = String[],
+        AuthorBuildVersion = String[],
+        AuthorLangID = String[],
+        AuthorPartNumber = String[],
+        ActivitySport = String[],
+        ActivityID = String[],
+        DeviceName = String[],
+        DeviceVersion = String[],
+        LapNumber = Int[],
+        StartTime = String[],
+        TotalTimeSeconds = Float64[],
+        DistanceMeters = Float64[],
+        Calories = Int[],
+        AverageHR = Union{Int, Missing}[],
+        MaximumHR = Union{Int, Missing}[],
+        Intensity = String[],
+        TrackPointTime = String[],
+        Latitude = Union{Float64, Missing}[],
+        Longitude = Union{Float64, Missing}[],
+        AltitudeMeters = Union{Float64, Missing}[],
+        DistanceMetersTP = Union{Float64, Missing}[],
+        HeartRateBpm = Union{Int, Missing}[],
+        Speed = Union{Float64, Missing}[]
+    )
+
+    for activity in activities
+        for (lap_num, lap) in enumerate(activity.laps)
+            for tp in lap.trackPoints
+                # Ensure all Nothing values are replaced with missing
+                row = (
+                    author.name,
+                    string(author.build.versionMajor, ".", author.build.versionMinor),
+                    author.langID,
+                    author.partNumber,
+                    activity.sport,
+                    string(activity.id),
+                    activity.device.name,
+                    activity.device.version,
+                    lap_num,
+                    string(lap.startTime),
+                    lap.totalTimeSeconds,
+                    lap.distanceMeters,
+                    lap.calories,
+                    lap.averageHeartRateBpm === nothing ? missing : lap.averageHeartRateBpm,
+                    lap.maximumHeartRateBpm === nothing ? missing : lap.maximumHeartRateBpm,
+                    lap.intensity,
+                    string(tp.time),
+                    tp.latitude === nothing ? missing : tp.latitude,
+                    tp.longitude === nothing ? missing : tp.longitude,
+                    tp.altitude_meters === nothing ? missing : tp.altitude_meters,
+                    tp.distance_meters === nothing ? missing : tp.distance_meters,
+                    tp.heart_rate_bpm === nothing ? missing : tp.heart_rate_bpm,
+                    tp.speed === nothing ? missing : tp.speed
+                )
+                push!(df, row)
+            end
+        end
+    end
+
+    CSV.write(csv_filepath, df; writeheader=true)
+end
+
+function loadTCXFile(filepath::String, csv_filepath::Union{String,Nothing}=nothing)
     doc = readxml(filepath)
     parsed_author = parseTCXAuthor(doc)
 
     activitiesNode = findfirst(".//g:Activities", doc.root, NS_MAP)
-    activities = []
+    activities = Vector{TCXActivity}()
 
     for activityNode in findall(".//g:Activity", activitiesNode, NS_MAP)
         sport = activityNode["Sport"]
@@ -123,6 +185,10 @@ function loadTCXFile(filepath::String)
         device_info = parseDeviceInfo(doc)
 
         push!(activities, TCXActivity(sport, id, parsed_laps, device_info))
+    end
+
+    if csv_filepath !== nothing
+        exportCSV(parsed_author, activities, csv_filepath)
     end
 
     return parsed_author, activities
