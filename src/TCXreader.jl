@@ -2,7 +2,7 @@ module TCXreader
 
 using EzXML, CSV, DataFrames, Dates
 
-export TCXTrackPoint, BuildVersion, TCXAuthor, TCXLap, TCXActivity, DeviceInfo, loadTCXFile, parseTCXAuthor, parseTCXLap, parseTCXTrackPoint, parseDeviceInfo
+export TCXTrackPoint, BuildVersion, TCXAuthor, TCXLap, TCXActivity, DeviceInfo, loadTCXFile, parseTCXAuthor, parseTCXLap, parseTCXTrackPoint, parseDeviceInfo, exportCSV
 
 include("TCXTrackPoint.jl")
 include("TCXAuthor.jl")
@@ -135,7 +135,6 @@ function exportCSV(author::TCXAuthor, activities::Vector{TCXActivity}, csv_filep
     for activity in activities
         for (lap_num, lap) in enumerate(activity.laps)
             for tp in lap.trackPoints
-                # Ensure all Nothing values are replaced with missing
                 row = (
                     author.name,
                     string(author.build.versionMajor, ".", author.build.versionMinor),
@@ -167,6 +166,7 @@ function exportCSV(author::TCXAuthor, activities::Vector{TCXActivity}, csv_filep
     end
 
     CSV.write(csv_filepath, df; writeheader=true)
+    println("Exported complete TCX data to $csv_filepath")
 end
 
 function loadTCXFile(filepath::String, csv_filepath::Union{String,Nothing}=nothing)
