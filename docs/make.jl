@@ -4,6 +4,9 @@ using TCXreader
 makedocs(
     sitename = "TCXreader",
     format = Documenter.HTML(),
-    modules = [TCXreader]
+    modules = [TCXreader],
+    pages = [
+        "Home" => "index.md",
+    ]
 )
 

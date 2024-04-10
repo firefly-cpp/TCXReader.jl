@@ -22,8 +22,9 @@ using TCXreader
 author, activities = loadTCXFile("path/to/your/file.tcx")
 ```
 
-## API Reference
-
+```@docs
+TCXreader.TCXTrackPoint
+```
 ### `TCXTrackPoint`
 
 - **Description**: Represents a single track point in a TCX file, encapsulating geographical, temporal, and physiological data.
@@ -36,6 +37,9 @@ author, activities = loadTCXFile("path/to/your/file.tcx")
   - `heart_rate_bpm`: Heart rate in BPM (optional).
   - `speed`: Speed in m/s (optional).
 
+```@docs
+TCXreader.TCXLap
+```
 ### `TCXLap`
 
 - **Description**: Represents a single lap within a TCX file, encapsulating temporal, physiological, and spatial metrics.
@@ -53,6 +57,9 @@ author, activities = loadTCXFile("path/to/your/file.tcx")
   - `triggerMethod`: Trigger method for the lap.
   - `avgSpeed`: Average speed (optional).
 
+```@docs
+TCXreader.TCXActivity
+```
 ### `TCXActivity`
 
 - **Description**: Represents a single activity within a TCX file, including the sport type, activity ID, laps, and device information.
@@ -62,6 +69,9 @@ author, activities = loadTCXFile("path/to/your/file.tcx")
   - `laps`: Vector of `TCXLap`.
   - `device`: Device information (`DeviceInfo`).
 
+```@docs
+TCXreader.TCXDeviceInfo
+```
 ### `DeviceInfo`
 
 - **Description**: Represents the device that recorded the TCX activity, including details such as the name, unit ID, product ID, and version.
@@ -71,6 +81,9 @@ author, activities = loadTCXFile("path/to/your/file.tcx")
   - `productId`: Product ID.
   - `version`: Device software version.
 
+```@docs
+TCXreader.TCXAuthor
+```
 ### `TCXAuthor`
 
 - **Description**: Represents the author of the TCX file, including the name, software build version, language ID, and part number.
