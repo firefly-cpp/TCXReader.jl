@@ -1,3 +1,7 @@
+<div width="200" style="background-color: white; width: 200px">
+ <img width="200" style="margin-bottom:-8px" src="https://raw.githubusercontent.com/firefly-cpp/TCXreader.jl/main/.github/logo/tcxreader_jl.webp">
+</div>
+
 # TCXreader.jl -- A parser for TCX files
 
 ## About 📋
