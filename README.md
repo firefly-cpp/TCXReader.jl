@@ -2,7 +2,15 @@
 
 ## About 📋
 
+TCXReader.jl is a Julia package designed to simplify the process of reading and processing .tcx files, commonly used by Garmin devices and other GPS-enabled fitness devices to store workout data. This package allows Julia developers and data scientists to easily import, analyze, and transform training data for further analysis and visualization. With support for key TCX data elements such as track points, laps, activities, and device information, TCXReader.jl provides a comprehensive toolset for accessing the rich data captured during workouts.
+
 ## Detailed insights ✨
+🚀
+- **TCXreader** is a Julia package that provides a simple interface for reading and processing .tcx files, commonly used by Garmin devices and other GPS-enabled fitness devices to store workout data.
+- **TCXActivity**: Access metadata about the workout, including the activity type, start time, and total distance.
+- **TCXAuthor**: Retrieve information about the author of the workout, including name, build version, language ID, and part number.
+- **TCXLap**: Retrieve information about laps within a workout, including start and end times, total distance, and total time.
+- **TCXTrackPoint**: Access detailed information about each trackpoint in a workout, including time, latitude, longitude, altitude, and heart rate.
 
 ## Installation 📦
 
@@ -12,11 +20,54 @@ pkg> add TCXreader
 
 ## Usage 🚀
 
+```julia
+using TCXreader: loadTCXFile
+
+# Load a TCX file and access its data
+author, activities = loadTCXFile("path/to/your/file.tcx")
+```
+
 ### Basic run example
 
-## Reference papers 📄
+```julia
+using TCXreader: loadTCXFile
 
-## Related frameworks 🔗
+function main()
+    # Load a TCX file and access its data
+    author, activities = loadTCXFile("path/to/your/file.tcx")
+
+    # Display basic information about the workout's author
+    println("Author Information:")
+    println("Name: ", author.name)
+    println("Build Version: ", author.build.versionMajor, ".", author.build.versionMinor)
+    println("Language ID: ", author.langID)
+    println("Part Number: ", author.partNumber)
+
+    # Iterate through each activity in the TCX file
+    for activity in activities
+        println("\nActivity Information:")
+        println("Sport: ", activity.sport)
+        println("ID: ", activity.id)
+        println("Device Name: ", activity.device.name)
+        println("Device Version: ", activity.device.version)
+
+        # Display information about each lap within the activity
+        println("\nLaps and Track Points:")
+        for (i, lap) in enumerate(activity.laps)
+            println("Lap #$i:")
+            println("\tStart Time: ", lap.startTime)
+            println("\tTotal Time Seconds: ", lap.totalTimeSeconds)
+            println("\tDistance Meters: ", lap.distanceMeters)
+            # Additional lap details here
+        end
+    end
+
+    # Optionally, export the loaded data to a CSV file for further analysis
+    loadTCXFile("path/to/your/file.tcx", "output_path/tcx_data_export.csv")
+end
+
+main()
+```
 
 ## License
 
