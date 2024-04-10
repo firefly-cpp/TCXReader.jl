@@ -70,7 +70,7 @@ TCXreader.TCXActivity
   - `device`: Device information (`DeviceInfo`).
 
 ```@docs
-TCXreader.TCXDeviceInfo
+TCXreader.DeviceInfo
 ```
 ### `DeviceInfo`
 
@@ -83,6 +83,7 @@ TCXreader.TCXDeviceInfo
 
 ```@docs
 TCXreader.TCXAuthor
+TCXreader.BuildVersion
 ```
 ### `TCXAuthor`
 
