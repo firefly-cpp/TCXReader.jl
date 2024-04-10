@@ -1,6 +1,6 @@
-include("../src/TCXreader.jl")
+include("../src/TCXReader.jl")
 
-using .TCXreader: loadTCXFile
+using .TCXReader: loadTCXFile
 
 function main()
     author, activities = loadTCXFile("../example_data/15.tcx")

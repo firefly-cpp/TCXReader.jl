@@ -2,7 +2,7 @@
  <img width="200" style="margin-bottom:-8px" src="https://raw.githubusercontent.com/firefly-cpp/TCXreader.jl/main/.github/logo/tcxreader_jl.webp">
 </div>
 
-# TCXreader.jl -- A parser for TCX files
+# TCXReader.jl -- A parser for TCX files
 
 ## About 📋
 
@@ -10,7 +10,7 @@ TCXReader.jl is a Julia package designed to simplify the process of reading and 
 
 ## Detailed insights ✨
 🚀
-- **TCXreader** is a Julia package that provides a simple interface for reading and processing .tcx files, commonly used by Garmin devices and other GPS-enabled fitness devices to store workout data.
+- **TCXReader** is a Julia package that provides a simple interface for reading and processing .tcx files, commonly used by Garmin devices and other GPS-enabled fitness devices to store workout data.
 - **TCXActivity**: Access metadata about the workout, including the activity type, start time, and total distance.
 - **TCXAuthor**: Retrieve information about the author of the workout, including name, build version, language ID, and part number.
 - **TCXLap**: Retrieve information about laps within a workout, including start and end times, total distance, and total time.
@@ -19,13 +19,13 @@ TCXReader.jl is a Julia package designed to simplify the process of reading and 
 ## Installation 📦
 
 ```
-pkg> add TCXreader
+pkg> add TCXReader
 ```
 
 ## Usage 🚀
 
 ```julia
-using TCXreader: loadTCXFile
+using TCXReader: loadTCXFile
 
 # Load a TCX file and access its data
 author, activities = loadTCXFile("path/to/your/file.tcx")
@@ -34,7 +34,7 @@ author, activities = loadTCXFile("path/to/your/file.tcx")
 ### Basic run example
 
 ```julia
-using TCXreader: loadTCXFile
+using TCXReader: loadTCXFile
 
 function main()
     # Load a TCX file and access its data

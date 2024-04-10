@@ -1,29 +1,29 @@
 
-# TCXreader.jl Documentation
+# TCXReader.jl Documentation
 
 ## Introduction
 
-TCXreader is a Julia package designed for parsing and analyzing Training Center XML (TCX) files. These files are commonly used by sports and fitness devices (like Garmin) to store workout data, including tracks, laps, and physiological metrics.
+TCXReader is a Julia package designed for parsing and analyzing Training Center XML (TCX) files. These files are commonly used by sports and fitness devices (like Garmin) to store workout data, including tracks, laps, and physiological metrics.
 
 ## Installation
 
 ```julia
 using Pkg
-Pkg.add("TCXreader")
+Pkg.add("TCXReader")
 ```
 
 ## Usage
 
-To use TCXreader, you first need to load the package and then call the `loadTCXFile` function with the path to your TCX file.
+To use TCXReader, you first need to load the package and then call the `loadTCXFile` function with the path to your TCX file.
 
 ```julia
-using TCXreader
+using TCXReader
 
 author, activities = loadTCXFile("path/to/your/file.tcx")
 ```
 
 ```@docs
-TCXreader.TCXTrackPoint
+TCXReader.TCXTrackPoint
 ```
 ### `TCXTrackPoint`
 
@@ -38,7 +38,7 @@ TCXreader.TCXTrackPoint
   - `speed`: Speed in m/s (optional).
 
 ```@docs
-TCXreader.TCXLap
+TCXReader.TCXLap
 ```
 ### `TCXLap`
 
@@ -58,7 +58,7 @@ TCXreader.TCXLap
   - `avgSpeed`: Average speed (optional).
 
 ```@docs
-TCXreader.TCXActivity
+TCXReader.TCXActivity
 ```
 ### `TCXActivity`
 
@@ -70,7 +70,7 @@ TCXreader.TCXActivity
   - `device`: Device information (`DeviceInfo`).
 
 ```@docs
-TCXreader.DeviceInfo
+TCXReader.DeviceInfo
 ```
 ### `DeviceInfo`
 
@@ -82,8 +82,8 @@ TCXreader.DeviceInfo
   - `version`: Device software version.
 
 ```@docs
-TCXreader.TCXAuthor
-TCXreader.BuildVersion
+TCXReader.TCXAuthor
+TCXReader.BuildVersion
 ```
 ### `TCXAuthor`
 

@@ -1,10 +1,10 @@
 using Documenter
-using TCXreader
+using TCXReader
 
 makedocs(
-    sitename = "TCXreader",
+    sitename = "TCXReader",
     format = Documenter.HTML(),
-    modules = [TCXreader],
+    modules = [TCXReader],
     pages = [
         "Home" => "index.md",
     ]

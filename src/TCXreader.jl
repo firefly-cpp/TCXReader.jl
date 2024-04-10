@@ -1,4 +1,4 @@
-module TCXreader
+module TCXReader
 
 using EzXML, CSV, DataFrames, Dates
 

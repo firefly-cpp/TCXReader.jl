@@ -1,4 +1,4 @@
-name = "TCXreader"
+name = "TCXReader"
 uuid = "1acf2333-b1bd-424d-862d-25e89a4f23c1"
 authors = ["Tilen Hliš <tilen.hlis@gmail.com>", "Iztok Fister Jr. <iztok@iztok-jr-fister.eu>"]
 version = "0.1.0"

@@ -1,5 +1,5 @@
 using Test
-using TCXreader
+using TCXReader
 using Dates
 
 @testset "TCXLap Tests" begin

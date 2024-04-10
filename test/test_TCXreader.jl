@@ -1,5 +1,5 @@
 using Test
-using TCXreader
+using TCXReader
 using EzXML
 using Dates
 using CSV
@@ -9,23 +9,23 @@ using DataFrames
     @testset "parseOptionalFloat" begin
         xml_doc = parsexml("<root><node>3.14</node></root>")
         node = findfirst("//node", xml_doc)
-        @test TCXreader.parseOptionalFloat(node, ".") ≈ 3.14
+        @test TCXReader.parseOptionalFloat(node, ".") ≈ 3.14
     end
 
     @testset "parseOptionalInt" begin
         xml_doc = parsexml("<root><node>42</node></root>")
         node = findfirst("//node", xml_doc)
-        @test TCXreader.parseOptionalInt(node, ".") === 42
+        @test TCXReader.parseOptionalInt(node, ".") === 42
     end
 
     @testset "parseOptionalString" begin
         xml_doc = parsexml("<root><node>hello</node></root>")
         node = findfirst("//node", xml_doc)
-        @test TCXreader.parseOptionalString(node, ".") === "hello"
+        @test TCXReader.parseOptionalString(node, ".") === "hello"
     end
 
     @testset "parseDateTime" begin
-        @test TCXreader.parseDateTime("2021-01-01T12:00:00.000Z") === DateTime(2021, 1, 1, 12)
+        @test TCXReader.parseDateTime("2021-01-01T12:00:00.000Z") === DateTime(2021, 1, 1, 12)
     end
 end
 
@@ -75,9 +75,9 @@ end
     root_node = root(doc)
 
     @testset "parseTCXTrackPoint" begin
-        tp_node = findfirst("//g:Trackpoint", root_node, TCXreader.NS_MAP)
+        tp_node = findfirst("//g:Trackpoint", root_node, TCXReader.NS_MAP)
         if tp_node !== nothing
-            tp = TCXreader.parseTCXTrackPoint(tp_node)
+            tp = TCXReader.parseTCXTrackPoint(tp_node)
             @test tp.time == DateTime(2021, 1, 1, 12)
             @test tp.latitude ≈ 45.0
             @test tp.longitude ≈ 13.0
@@ -91,9 +91,9 @@ end
     end
 
     @testset "parseTCXLap" begin
-        lap_node = findfirst("//g:Lap", root_node, TCXreader.NS_MAP)
+        lap_node = findfirst("//g:Lap", root_node, TCXReader.NS_MAP)
         if lap_node !== nothing
-            lap = TCXreader.parseTCXLap(lap_node)
+            lap = TCXReader.parseTCXLap(lap_node)
             @test lap.startTime == DateTime(2021, 1, 1, 12)
             @test lap.totalTimeSeconds == 3600
             @test lap.distanceMeters == 10000
@@ -105,7 +105,7 @@ end
     end
 
     #    @testset "parseTCXAuthor" begin
-    #        author = TCXreader.parseTCXAuthor(doc)
+    #        author = TCXReader.parseTCXAuthor(doc)
     #        @test author.name == "Garmin Connect API"
     #        @test author.build.versionMajor == 17
     #        @test author.build.versionMinor == 20
@@ -113,7 +113,7 @@ end
     #        @test author.partNumber == "006-D2449-00"
     #    end
 
-    @testset "TCXreader Tests - exportCSV" begin
+    @testset "TCXReader Tests - exportCSV" begin
 
         author = TCXAuthor("Test Author", BuildVersion(1, 0, 0, 0), "en-US", "000-00000-00")
         trackPoints = [
@@ -125,7 +125,7 @@ end
 
         csv_filepath = "exported_data.csv"
 
-        TCXreader.exportCSV(author, activities, csv_filepath)
+        TCXReader.exportCSV(author, activities, csv_filepath)
 
         @test isfile(csv_filepath)
 
