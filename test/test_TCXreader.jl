@@ -113,7 +113,7 @@ end
     #        @test author.partNumber == "006-D2449-00"
     #    end
 
-    @testset "TCXReader Tests - exportCSV" begin
+    @testset "TCXReader Tests -> exportCSV" begin
 
         author = TCXAuthor("Test Author", BuildVersion(1, 0, 0, 0), "en-US", "000-00000-00")
         trackPoints = [
