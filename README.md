@@ -73,6 +73,10 @@ end
 main()
 ```
 
+## Related packages/frameworks
+
+[1] [tcxreader: Python reader/parser for Garmin's TCX file format.](https://github.com/alenrajsp/tcxreader)
+
 ## License
 
 This package is distributed under the MIT License. This license can be found online at <http://www.opensource.org/licenses/MIT>.
