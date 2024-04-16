@@ -4,6 +4,10 @@
 
 # TCXReader.jl -- A parser for TCX files
 
+[![GitHub license](https://img.shields.io/github/license/firefly-cpp/TCXReader.jl.svg)](https://github.com/firefly-cpp/TCXReader.jl/blob/master/LICENSE)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/w/firefly-cpp/TCXReader.jl.svg)
+[![version](https://juliahub.com/docs/General/TCXReader/stable/version.svg)](https://juliahub.com/ui/Packages/General/TCXReader)
+
 ## About 📋
 
 TCXReader.jl is a Julia package designed to simplify the process of reading and processing .tcx files, commonly used by Garmin devices and other GPS-enabled fitness devices to store workout data. This package allows Julia developers and data scientists to easily import, analyze, and transform training data for further analysis and visualization. With support for key TCX data elements such as track points, laps, activities, and device information, TCXReader.jl provides a comprehensive toolset for accessing the rich data captured during workouts.
