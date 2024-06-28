@@ -2,11 +2,14 @@ using Documenter
 using TCXReader
 
 makedocs(
-    sitename = "TCXReader",
-    format = Documenter.HTML(),
-    modules = [TCXReader],
-    pages = [
+    modules=[TCXReader],
+    clean=true,
+    format=Documenter.HTML(),
+    sitename="TCXReader.jl Documentation",
+    pages=[
         "Home" => "index.md",
+        "Functions" => "functions.md",
+        "Types" => "types.md"
     ]
 )
 
