@@ -14,25 +14,83 @@ const NS_MAP = Dict(
     "ns3" => "http://www.garmin.com/xmlschemas/ActivityExtension/v2"
 )
 
+"""
+    parseOptionalFloat(node, path)
+
+Parse an optional float value from an XML node. If the value is not found, return `nothing`.
+
+# Arguments
+- `node`: The XML node to search within.
+- `path`: The XPath string to locate the desired value.
+
+# Returns
+- `Float64` value if found, otherwise `nothing`.
+"""
 function parseOptionalFloat(node, path)
     valueNode = findfirst(path, node, NS_MAP)
     valueNode !== nothing ? parse(Float64, nodecontent(valueNode)) : nothing
 end
 
+"""
+    parseOptionalInt(node, path)
+
+Parse an optional integer value from an XML node. If the value is not found, return `nothing`.
+
+# Arguments
+- `node`: The XML node to search within.
+- `path`: The XPath string to locate the desired value.
+
+# Returns
+- `Int` value if found, otherwise `nothing`.
+"""
 function parseOptionalInt(node, path)
     valueNode = findfirst(path, node, NS_MAP)
     valueNode !== nothing ? parse(Int, nodecontent(valueNode)) : nothing
 end
 
+"""
+    parseOptionalString(node, path)
+
+Parse an optional string value from an XML node. If the value is not found, return an empty string.
+
+# Arguments
+- `node`: The XML node to search within.
+- `path`: The XPath string to locate the desired value.
+
+# Returns
+- `String` value if found, otherwise an empty string.
+"""
 function parseOptionalString(node, path)
     valueNode = findfirst(path, node, NS_MAP)
     valueNode !== nothing ? nodecontent(valueNode) : ""
 end
 
+"""
+    parseDateTime(timeStr::String)
+
+Parse a date-time string into a `DateTime` object. If the string is empty, return a default `DateTime` value.
+
+# Arguments
+- `timeStr`: The date-time string to parse.
+
+# Returns
+- `DateTime` object.
+"""
 function parseDateTime(timeStr::String)
     isempty(timeStr) ? DateTime(1, 1, 1) : DateTime(timeStr, dateformat"yyyy-mm-ddTHH:MM:SS.sssZ")
 end
 
+"""
+    parseTCXLap(node::EzXML.Node)::TCXLap
+
+Parse a TCX lap node into a `TCXLap` object.
+
+# Arguments
+- `node`: The XML node representing the lap.
+
+# Returns
+- `TCXLap` object.
+"""
 function parseTCXLap(node::EzXML.Node)::TCXLap
     startTime = parseDateTime(node["StartTime"])
     totalTimeSeconds = parseOptionalFloat(node, ".//g:TotalTimeSeconds")
@@ -53,6 +111,17 @@ function parseTCXLap(node::EzXML.Node)::TCXLap
         intensity=intensity, cadence=cadence, trackPoints=trackPoints, triggerMethod=triggerMethod, avgSpeed=avgSpeed)
 end
 
+"""
+    parseTCXTrackPoint(node::EzXML.Node)
+
+Parse a TCX track point node into a `TCXTrackPoint` object.
+
+# Arguments
+- `node`: The XML node representing the track point.
+
+# Returns
+- `TCXTrackPoint` object.
+"""
 function parseTCXTrackPoint(node::EzXML.Node)
     time = parseDateTime(nodecontent(findfirst(".//g:Time", node, NS_MAP)))
     latitude = parseOptionalFloat(node, ".//g:Position/g:LatitudeDegrees")
@@ -65,6 +134,17 @@ function parseTCXTrackPoint(node::EzXML.Node)
     return TCXTrackPoint(time, latitude, longitude, altitude_meters, distance_meters, heart_rate_bpm, speed)
 end
 
+"""
+    parseBuildVersion(node::EzXML.Node)
+
+Parse a build version node into a `BuildVersion` object.
+
+# Arguments
+- `node`: The XML node representing the build version.
+
+# Returns
+- `BuildVersion` object.
+"""
 function parseBuildVersion(node::EzXML.Node)
     versionMajor = parse(Int, nodecontent(findfirst(".//g:VersionMajor", node, NS_MAP)))
     versionMinor = parse(Int, nodecontent(findfirst(".//g:VersionMinor", node, NS_MAP)))
@@ -74,6 +154,17 @@ function parseBuildVersion(node::EzXML.Node)
     return BuildVersion(versionMajor, versionMinor, buildMajor, buildMinor)
 end
 
+"""
+    parseTCXAuthor(doc::EzXML.Document)
+
+Parse the author information from a TCX document into a `TCXAuthor` object.
+
+# Arguments
+- `doc`: The XML document representing the TCX file.
+
+# Returns
+- `TCXAuthor` object.
+"""
 function parseTCXAuthor(doc::EzXML.Document)
     authorNode = findfirst(".//g:Author", doc.root, NS_MAP)
 
@@ -90,6 +181,17 @@ function parseTCXAuthor(doc::EzXML.Document)
     end
 end
 
+"""
+    parseDeviceInfo(doc::EzXML.Document)
+
+Parse the device information from a TCX document into a `DeviceInfo` object.
+
+# Arguments
+- `doc`: The XML document representing the TCX file.
+
+# Returns
+- `DeviceInfo` object.
+"""
 function parseDeviceInfo(doc::EzXML.Document)
     creatorNode = findfirst(".//g:Creator", doc.root, NS_MAP)
     if creatorNode !== nothing
@@ -105,6 +207,16 @@ function parseDeviceInfo(doc::EzXML.Document)
     end
 end
 
+"""
+    exportCSV(author::TCXAuthor, activities::Vector{TCXActivity}, csv_filepath::String)
+
+Export the parsed TCX data to a CSV file.
+
+# Arguments
+- `author`: The `TCXAuthor` object containing author information.
+- `activities`: A vector of `TCXActivity` objects representing the activities.
+- `csv_filepath`: The file path where the CSV file will be saved.
+"""
 function exportCSV(author::TCXAuthor, activities::Vector{TCXActivity}, csv_filepath::String)
     df = DataFrame(
         AuthorName = String[],
@@ -169,6 +281,18 @@ function exportCSV(author::TCXAuthor, activities::Vector{TCXActivity}, csv_filep
     println("Exported complete TCX data to $csv_filepath")
 end
 
+"""
+    loadTCXFile(filepath::String, csv_filepath::Union{String,Nothing}=nothing)
+
+Load a TCX file and parse its contents.
+
+# Arguments
+- `filepath`: The path to the TCX file.
+- `csv_filepath`: Optional. If provided, the parsed data will be exported to this CSV file.
+
+# Returns
+- A tuple containing the parsed `TCXAuthor` and a vector of `TCXActivity` objects.
+"""
 function loadTCXFile(filepath::String, csv_filepath::Union{String,Nothing}=nothing)
     doc = readxml(filepath)
     parsed_author = parseTCXAuthor(doc)
