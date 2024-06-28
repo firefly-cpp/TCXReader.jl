@@ -1,4 +1,3 @@
-
 # TCXReader.jl Documentation
 
 ## Introduction
@@ -22,79 +21,15 @@ using TCXReader
 author, activities = loadTCXFile("path/to/your/file.tcx")
 ```
 
-```@docs
-TCXReader.TCXTrackPoint
-```
-### `TCXTrackPoint`
+## Functions
 
-- **Description**: Represents a single track point in a TCX file, encapsulating geographical, temporal, and physiological data.
-- **Fields**:
-  - `time`: The timestamp of the track point.
-  - `latitude`: Latitude coordinate (optional).
-  - `longitude`: Longitude coordinate (optional).
-  - `altitude_meters`: Altitude in meters (optional).
-  - `distance_meters`: Cumulative distance in meters (optional).
-  - `heart_rate_bpm`: Heart rate in BPM (optional).
-  - `speed`: Speed in m/s (optional).
+For detailed documentation on all functions, see [Functions](@ref).
 
-```@docs
-TCXReader.TCXLap
-```
-### `TCXLap`
+## Types
 
-- **Description**: Represents a single lap within a TCX file, encapsulating temporal, physiological, and spatial metrics.
-- **Fields**:
-  - `startTime`: Lap's start time.
-  - `totalTimeSeconds`: Total time in seconds.
-  - `distanceMeters`: Distance in meters.
-  - `maximumSpeed`: Maximum speed (optional).
-  - `calories`: Calories burned.
-  - `averageHeartRateBpm`: Average heart rate (optional).
-  - `maximumHeartRateBpm`: Maximum heart rate (optional).
-  - `intensity`: Lap intensity.
-  - `cadence`: Cadence (optional).
-  - `trackPoints`: Vector of `TCXTrackPoint`.
-  - `triggerMethod`: Trigger method for the lap.
-  - `avgSpeed`: Average speed (optional).
+For detailed documentation on all types, see [Types](@ref).
 
-```@docs
-TCXReader.TCXActivity
-```
-### `TCXActivity`
-
-- **Description**: Represents a single activity within a TCX file, including the sport type, activity ID, laps, and device information.
-- **Fields**:
-  - `sport`: Sport type.
-  - `id`: Activity identifier, typically a timestamp.
-  - `laps`: Vector of `TCXLap`.
-  - `device`: Device information (`DeviceInfo`).
-
-```@docs
-TCXReader.DeviceInfo
-```
-### `DeviceInfo`
-
-- **Description**: Represents the device that recorded the TCX activity, including details such as the name, unit ID, product ID, and version.
-- **Fields**:
-  - `name`: Device name.
-  - `unitId`: Unit ID.
-  - `productId`: Product ID.
-  - `version`: Device software version.
-
-```@docs
-TCXReader.TCXAuthor
-TCXReader.BuildVersion
-```
-### `TCXAuthor`
-
-- **Description**: Represents the author of the TCX file, including the name, software build version, language ID, and part number.
-- **Fields**:
-  - `name`: Author name.
-  - `build`: Software build version (`BuildVersion`).
-  - `langID`: Language ID.
-  - `partNumber`: Part number.
-
-### Exporting Data
+## Exporting Data
 
 You can also export the loaded TCX data into a CSV file using the `exportCSV` function.
 
@@ -102,7 +37,7 @@ You can also export the loaded TCX data into a CSV file using the `exportCSV` fu
 exportCSV(author, activities, "output_path.csv")
 ```
 
-For more detailed examples and additional functionality, please refer to the [GitHub repository](https://github.com/firefly-cpp/TCXreader.jl).
+For more detailed examples and additional functionality, please refer to the [GitHub repository](https://github.com/firefly-cpp/TCXReader.jl).
 
 ## Contributing
 
