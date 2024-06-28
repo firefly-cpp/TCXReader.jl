@@ -23,11 +23,11 @@ author, activities = loadTCXFile("path/to/your/file.tcx")
 
 ## Functions
 
-For detailed documentation on all functions, see [Functions](@ref).
+For detailed documentation on all functions, see [Functions](functions.md).
 
 ## Types
 
-For detailed documentation on all types, see [Types](@ref).
+For detailed documentation on all types, see [Types](types.md).
 
 ## Exporting Data
 
