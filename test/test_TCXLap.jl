@@ -4,7 +4,7 @@ using Dates
 
 @testset "TCXLap Tests" begin
     start_time = DateTime(2021, 1, 1, 12)
-    tp = TCXTrackPoint(start_time, 45.0, 13.0, 100.0, 1000.0, 150, 2.5)
+    tp = TCXTrackPoint(start_time, 45.0, 13.0, 100.0, 1000.0, 150, 100, 2.5, 200)
     lap = TCXLap(
     start_time, 
     totalTimeSeconds=3600.0, 
