@@ -51,8 +51,10 @@ end
                             <AltitudeMeters>100</AltitudeMeters>
                             <DistanceMeters>1000</DistanceMeters>
                             <HeartRateBpm><Value>150</Value></HeartRateBpm>
+                            <Cadence>100</Cadence>
                             <Extensions>
                                 <ns3:TPX><ns3:Speed>2.5</ns3:Speed></ns3:TPX>
+                                <ns3:TPX><ns3:Watts>200</ns3:Watts></ns3:TPX>
                             </Extensions>
                         </Trackpoint>
                     </Track>
@@ -84,7 +86,9 @@ end
             @test tp.altitude_meters ≈ 100.0
             @test tp.distance_meters ≈ 1000.0
             @test tp.heart_rate_bpm === 150
+            @test tp.cadence === 100
             @test tp.speed ≈ 2.5
+            @test tp.watts === 200
         else
             @test false
         end

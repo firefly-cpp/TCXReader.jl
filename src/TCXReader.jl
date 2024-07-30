@@ -122,16 +122,18 @@ Parse a TCX track point node into a `TCXTrackPoint` object.
 # Returns
 - `TCXTrackPoint` object.
 """
-function parseTCXTrackPoint(node::EzXML.Node)
+function parseTCXTrackPoint(node::EzXML.Node)::TCXTrackPoint
     time = parseDateTime(nodecontent(findfirst(".//g:Time", node, NS_MAP)))
     latitude = parseOptionalFloat(node, ".//g:Position/g:LatitudeDegrees")
     longitude = parseOptionalFloat(node, ".//g:Position/g:LongitudeDegrees")
     altitude_meters = parseOptionalFloat(node, ".//g:AltitudeMeters")
     distance_meters = parseOptionalFloat(node, ".//g:DistanceMeters")
     heart_rate_bpm = parseOptionalInt(node, ".//g:HeartRateBpm/g:Value")
+    cadence = parseOptionalInt(node, ".//g:Cadence")
     speed = parseOptionalFloat(node, ".//ns3:TPX/ns3:Speed")
+    watts = parseOptionalInt(node, ".//ns3:TPX/ns3:Watts")
 
-    return TCXTrackPoint(time, latitude, longitude, altitude_meters, distance_meters, heart_rate_bpm, speed)
+    return TCXTrackPoint(time, latitude, longitude, altitude_meters, distance_meters, heart_rate_bpm, cadence, speed, watts)
 end
 
 """
@@ -145,7 +147,7 @@ Parse a build version node into a `BuildVersion` object.
 # Returns
 - `BuildVersion` object.
 """
-function parseBuildVersion(node::EzXML.Node)
+function parseBuildVersion(node::EzXML.Node)::BuildVersion
     versionMajor = parse(Int, nodecontent(findfirst(".//g:VersionMajor", node, NS_MAP)))
     versionMinor = parse(Int, nodecontent(findfirst(".//g:VersionMinor", node, NS_MAP)))
     buildMajor = parse(Int, nodecontent(findfirst(".//g:BuildMajor", node, NS_MAP)))
@@ -165,7 +167,7 @@ Parse the author information from a TCX document into a `TCXAuthor` object.
 # Returns
 - `TCXAuthor` object.
 """
-function parseTCXAuthor(doc::EzXML.Document)
+function parseTCXAuthor(doc::EzXML.Document)::TCXAuthor
     authorNode = findfirst(".//g:Author", doc.root, NS_MAP)
 
     if authorNode !== nothing
@@ -192,7 +194,7 @@ Parse the device information from a TCX document into a `DeviceInfo` object.
 # Returns
 - `DeviceInfo` object.
 """
-function parseDeviceInfo(doc::EzXML.Document)
+function parseDeviceInfo(doc::EzXML.Document)::DeviceInfo
     creatorNode = findfirst(".//g:Creator", doc.root, NS_MAP)
     if creatorNode !== nothing
         name = nodecontent(findfirst(".//g:Name", creatorNode, NS_MAP))
@@ -241,7 +243,9 @@ function exportCSV(author::TCXAuthor, activities::Vector{TCXActivity}, csv_filep
         AltitudeMeters = Union{Float64, Missing}[],
         DistanceMetersTP = Union{Float64, Missing}[],
         HeartRateBpm = Union{Int, Missing}[],
-        Speed = Union{Float64, Missing}[]
+        Cadence = Union{Int, Missing}[],
+        Speed = Union{Float64, Missing}[],
+        Watts = Union{Int, Missing}[]
     )
 
     for activity in activities
@@ -270,7 +274,9 @@ function exportCSV(author::TCXAuthor, activities::Vector{TCXActivity}, csv_filep
                     tp.altitude_meters === nothing ? missing : tp.altitude_meters,
                     tp.distance_meters === nothing ? missing : tp.distance_meters,
                     tp.heart_rate_bpm === nothing ? missing : tp.heart_rate_bpm,
-                    tp.speed === nothing ? missing : tp.speed
+                    tp.cadence === nothing ? missing : tp.cadence,
+                    tp.speed === nothing ? missing : tp.speed,
+                    tp.watts === nothing ? missing : tp.watts
                 )
                 push!(df, row)
             end

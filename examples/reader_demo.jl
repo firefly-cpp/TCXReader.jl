@@ -3,7 +3,7 @@ include("../src/TCXReader.jl")
 using .TCXReader: loadTCXFile
 
 function main()
-    author, activities = loadTCXFile("../example_data/15.tcx")
+    author, activities = loadTCXFile("../example_data/23.tcx")
 
     # Displaying author information
     println("Author Information:")
@@ -42,14 +42,15 @@ function main()
             for tp in lap.trackPoints
                 println("\t\tTime: ", tp.time, ", Latitude: ", tp.latitude, ", Longitude: ", tp.longitude,
                     ", Altitude: ", tp.altitude_meters, ", Distance: ", tp.distance_meters,
-                    ", Heart Rate: ", tp.heart_rate_bpm, ", Speed: ", tp.speed)
+                    ", Heart Rate: ", tp.heart_rate_bpm, ", Cadence: ", tp.cadence,  
+                    ", Speed: ", tp.speed, ", Watts: ", tp.watts)
             end
         end
         println("===================================")
     end
 
     # Load a TCX file and export the data to CSV
-    author, activities = loadTCXFile("../example_data/15.tcx", "tcx_data_export.csv")
+    # author, activities = loadTCXFile("../example_data/15.tcx", "tcx_data_export.csv")
 
 end
 
