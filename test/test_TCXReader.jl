@@ -121,8 +121,8 @@ end
 
         author = TCXAuthor("Test Author", BuildVersion(1, 0, 0, 0), "en-US", "000-00000-00")
         trackPoints = [
-            TCXTrackPoint(DateTime(2021, 1, 1, 12), 45.0, 13.0, 100.0, 1000.0, 150, 2.5),
-            TCXTrackPoint(DateTime(2021, 1, 1, 12, 30), 45.1, 13.1, 105.0, 1500.0, 155, 2.6)
+            TCXTrackPoint(DateTime(2021, 1, 1, 12), 45.0, 13.0, 100.0, 1000.0, 150, 100, 2.5, 200),
+            TCXTrackPoint(DateTime(2021, 1, 1, 12, 30), 45.1, 13.1, 105.0, 1500.0, 155, 101, 2.6, 201)
         ]
         lap = TCXLap(DateTime(2021, 1, 1, 12), totalTimeSeconds=1800.0, distanceMeters=5000.0, maximumSpeed=3.0, calories=250, averageHeartRateBpm=150, maximumHeartRateBpm=160, intensity="Active", cadence=85, trackPoints=trackPoints, triggerMethod="Manual", avgSpeed=2.75)
         activities = [TCXActivity("Biking", DateTime(2021, 1, 1, 12), [lap], DeviceInfo("Garmin Edge 530", "123456789", 1, "1.0"))]
