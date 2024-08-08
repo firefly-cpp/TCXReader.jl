@@ -4,6 +4,7 @@ using EzXML
 using Dates
 using CSV
 using DataFrames
+using Statistics
 
 @testset "Utility Functions" begin
     @testset "parseOptionalFloat" begin
