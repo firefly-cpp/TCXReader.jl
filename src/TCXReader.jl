@@ -1,8 +1,8 @@
 module TCXReader
 
-using EzXML, CSV, DataFrames, Dates
+using EzXML, CSV, DataFrames, Dates, Statistics
 
-export TCXTrackPoint, BuildVersion, TCXAuthor, TCXLap, TCXActivity, DeviceInfo, loadTCXFile, parseTCXAuthor, parseTCXLap, parseTCXTrackPoint, parseDeviceInfo, exportCSV
+export TCXTrackPoint, BuildVersion, TCXAuthor, TCXLap, TCXActivity, DeviceInfo, loadTCXFile, parseTCXAuthor, parseTCXLap, parseTCXTrackPoint, parseDeviceInfo, exportCSV, calculate_averages_and_totals
 
 include("TCXTrackPoint.jl")
 include("TCXAuthor.jl")
@@ -288,6 +288,39 @@ function exportCSV(author::TCXAuthor, activities::Vector{TCXActivity}, csv_filep
 end
 
 """
+    calculate_averages_and_totals(lap_data::Vector{TCXLap})
+
+Calculate the total values for time, distance, and calories, and average values for other metrics across all laps.
+
+# Arguments
+- `lap_data`: A vector of `TCXLap` objects representing the laps.
+
+# Returns
+- A tuple containing total values for time, distance, and calories, and average values for maximum speed, average heart rate, maximum heart rate, cadence, and average speed.
+"""
+function calculate_averages_and_totals(lap_data::Vector{TCXLap})
+    total_time = sum([lap.totalTimeSeconds !== nothing ? lap.totalTimeSeconds : 0 for lap in lap_data])
+    total_distance = sum([lap.distanceMeters !== nothing ? lap.distanceMeters : 0 for lap in lap_data])
+    avg_max_speed = mean([lap.maximumSpeed !== nothing ? lap.maximumSpeed : 0 for lap in lap_data])
+    total_calories = sum([lap.calories !== nothing ? lap.calories : 0 for lap in lap_data]) |> Float64
+    avg_avg_hr = mean([lap.averageHeartRateBpm !== nothing ? lap.averageHeartRateBpm : 0 for lap in lap_data])
+    avg_max_hr = mean([lap.maximumHeartRateBpm !== nothing ? lap.maximumHeartRateBpm : 0 for lap in lap_data])
+    avg_cadence = mean([lap.cadence !== nothing ? lap.cadence : 0 for lap in lap_data])
+    avg_avg_speed = mean([lap.avgSpeed !== nothing ? lap.avgSpeed : 0 for lap in lap_data])
+
+    return (
+        total_time,
+        total_distance,
+        avg_max_speed,
+        total_calories,
+        avg_avg_hr,
+        avg_max_hr,
+        avg_cadence,
+        avg_avg_speed
+    )
+end
+
+"""
     loadTCXFile(filepath::String, csv_filepath::Union{String,Nothing}=nothing)
 
 Load a TCX file and parse its contents.
@@ -314,7 +347,13 @@ function loadTCXFile(filepath::String, csv_filepath::Union{String,Nothing}=nothi
         parsed_laps = [parseTCXLap(lap) for lap in lapNodes]
         device_info = parseDeviceInfo(doc)
 
-        push!(activities, TCXActivity(sport, id, parsed_laps, device_info))
+        # Calculate averages and totals for the activity
+        total_time, total_distance, avg_max_speed, total_calories, avg_avg_hr, avg_max_hr, avg_cadence, avg_avg_speed = calculate_averages_and_totals(parsed_laps)
+
+        # Create TCXActivity with averages and totals
+        activity = TCXActivity(sport, id, parsed_laps, device_info, total_time, total_distance, avg_max_speed, total_calories, avg_avg_hr, avg_max_hr, avg_cadence, avg_avg_speed)
+
+        push!(activities, activity)
     end
 
     if csv_filepath !== nothing

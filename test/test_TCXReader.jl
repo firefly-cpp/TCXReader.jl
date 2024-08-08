@@ -108,24 +108,23 @@ end
         end
     end
 
-    #    @testset "parseTCXAuthor" begin
-    #        author = TCXReader.parseTCXAuthor(doc)
-    #        @test author.name == "Garmin Connect API"
-    #        @test author.build.versionMajor == 17
-    #        @test author.build.versionMinor == 20
-    #        @test author.langID == "en"
-    #        @test author.partNumber == "006-D2449-00"
-    #    end
+    # @testset "parseTCXAuthor" begin
+    #     author = TCXReader.parseTCXAuthor(doc)
+    #     @test author.name == "Garmin Connect API"
+    #     @test author.build.versionMajor == 17
+    #     @test author.build.versionMinor == 20
+    #     @test author.langID == "en"
+    #     @test author.partNumber == "006-D2449-00"
+    # end
 
     @testset "TCXReader Tests -> exportCSV" begin
-
         author = TCXAuthor("Test Author", BuildVersion(1, 0, 0, 0), "en-US", "000-00000-00")
         trackPoints = [
             TCXTrackPoint(DateTime(2021, 1, 1, 12), 45.0, 13.0, 100.0, 1000.0, 150, 100, 2.5, 200),
             TCXTrackPoint(DateTime(2021, 1, 1, 12, 30), 45.1, 13.1, 105.0, 1500.0, 155, 101, 2.6, 201)
         ]
         lap = TCXLap(DateTime(2021, 1, 1, 12), totalTimeSeconds=1800.0, distanceMeters=5000.0, maximumSpeed=3.0, calories=250, averageHeartRateBpm=150, maximumHeartRateBpm=160, intensity="Active", cadence=85, trackPoints=trackPoints, triggerMethod="Manual", avgSpeed=2.75)
-        activities = [TCXActivity("Biking", DateTime(2021, 1, 1, 12), [lap], DeviceInfo("Garmin Edge 530", "123456789", 1, "1.0"))]
+        activities = [TCXActivity("Biking", DateTime(2021, 1, 1, 12), [lap], DeviceInfo("Garmin Edge 530", "123456789", 1, "1.0"), 1800.0, 5000.0, 3.0, 250.0, 150.0, 160.0, 85.0, 2.75)]
 
         csv_filepath = "exported_data.csv"
 
@@ -134,7 +133,5 @@ end
         @test isfile(csv_filepath)
 
         isfile(csv_filepath) && rm(csv_filepath)
-
     end
-
 end
