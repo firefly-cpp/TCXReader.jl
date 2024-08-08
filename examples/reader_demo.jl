@@ -32,29 +32,29 @@ function main()
         println("Average Speed: ", activity.avg_avg_speed)
         println("===================================")
         # Displaying laps and their track points for each activity
-        # println("Laps and Track Points:")
-        # for (i, lap) in enumerate(activity.laps)
-        #     println("\nLap #$i:")
-        #     println("\tStart Time: ", lap.startTime)
-        #     println("\tTotal Time Seconds: ", lap.totalTimeSeconds)
-        #     println("\tDistance Meters: ", lap.distanceMeters)
-        #     println("\tMaximum Speed: ", lap.maximumSpeed)
-        #     println("\tCalories: ", lap.calories)
-        #     println("\tAverage Heart Rate Bpm: ", lap.averageHeartRateBpm)
-        #     println("\tMaximum Heart Rate Bpm: ", lap.maximumHeartRateBpm)
-        #     println("\tIntensity: ", lap.intensity)
-        #     println("\tCadence: ", lap.cadence)
-        #     println("\tTrigger Method: ", lap.triggerMethod)
-        #     println("\tAverage Speed: ", lap.avgSpeed)
-        #     println("\tTrack Points:")
-        #     for tp in lap.trackPoints
-        #         println("\t\tTime: ", tp.time, ", Latitude: ", tp.latitude, ", Longitude: ", tp.longitude,
-        #             ", Altitude: ", tp.altitude_meters, ", Distance: ", tp.distance_meters,
-        #             ", Heart Rate: ", tp.heart_rate_bpm, ", Cadence: ", tp.cadence,
-        #             ", Speed: ", tp.speed, ", Watts: ", tp.watts)
-        #     end
-        # end
-        # println("===================================")
+        println("Laps and Track Points:")
+        for (i, lap) in enumerate(activity.laps)
+            println("\nLap #$i:")
+            println("\tStart Time: ", lap.startTime)
+            println("\tTotal Time Seconds: ", lap.totalTimeSeconds)
+            println("\tDistance Meters: ", lap.distanceMeters)
+            println("\tMaximum Speed: ", lap.maximumSpeed)
+            println("\tCalories: ", lap.calories)
+            println("\tAverage Heart Rate Bpm: ", lap.averageHeartRateBpm)
+            println("\tMaximum Heart Rate Bpm: ", lap.maximumHeartRateBpm)
+            println("\tIntensity: ", lap.intensity)
+            println("\tCadence: ", lap.cadence)
+            println("\tTrigger Method: ", lap.triggerMethod)
+            println("\tAverage Speed: ", lap.avgSpeed)
+            println("\tTrack Points:")
+            for tp in lap.trackPoints
+                println("\t\tTime: ", tp.time, ", Latitude: ", tp.latitude, ", Longitude: ", tp.longitude,
+                    ", Altitude: ", tp.altitude_meters, ", Distance: ", tp.distance_meters,
+                    ", Heart Rate: ", tp.heart_rate_bpm, ", Cadence: ", tp.cadence,
+                    ", Speed: ", tp.speed, ", Watts: ", tp.watts)
+            end
+        end
+        println("===================================")
     end
 
     # Load a TCX file and export the data to CSV

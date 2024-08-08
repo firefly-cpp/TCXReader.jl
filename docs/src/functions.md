@@ -14,4 +14,5 @@ TCXReader.parseDeviceInfo
 TCXReader.parseOptionalInt
 TCXReader.parseBuildVersion
 TCXReader.parseOptionalString
+TCXReader.calculate_averages_and_totals
 ```
