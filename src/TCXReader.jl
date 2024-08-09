@@ -296,27 +296,72 @@ Calculate the total values for time, distance, and calories, and average values 
 - `lap_data`: A vector of `TCXLap` objects representing the laps.
 
 # Returns
-- A tuple containing total values for time, distance, and calories, and average values for maximum speed, average heart rate, maximum heart rate, cadence, and average speed.
+- A tuple containing total values for time, distance, calories, ascent, descent, and average values for maximum speed, average heart rate, maximum heart rate, cadence (Zero Averaging ON and OFF), maximum cadence, average speed, max altitude, average watts (Zero Averaging ON and OFF), and max watts.
 """
 function calculate_averages_and_totals(lap_data::Vector{TCXLap})
     total_time = sum([lap.totalTimeSeconds !== nothing ? lap.totalTimeSeconds : 0 for lap in lap_data])
     total_distance = sum([lap.distanceMeters !== nothing ? lap.distanceMeters : 0 for lap in lap_data])
-    avg_max_speed = mean([lap.maximumSpeed !== nothing ? lap.maximumSpeed : 0 for lap in lap_data])
     total_calories = sum([lap.calories !== nothing ? lap.calories : 0 for lap in lap_data]) |> Float64
-    avg_avg_hr = mean([lap.averageHeartRateBpm !== nothing ? lap.averageHeartRateBpm : 0 for lap in lap_data])
-    avg_max_hr = mean([lap.maximumHeartRateBpm !== nothing ? lap.maximumHeartRateBpm : 0 for lap in lap_data])
-    avg_cadence = mean([lap.cadence !== nothing ? lap.cadence : 0 for lap in lap_data])
-    avg_avg_speed = mean([lap.avgSpeed !== nothing ? lap.avgSpeed : 0 for lap in lap_data])
+
+    trackpoints = vcat([lap.trackPoints for lap in lap_data]...)
+
+    # Real average heart rate across all trackpoints
+    avg_hr = mean(filter(hr -> hr !== nothing, [tp.heart_rate_bpm for tp in trackpoints])) |> Float64
+
+    # Find the real highest speed from all trackpoints
+    max_speed = maximum(filter(speed -> speed !== nothing, [tp.speed for tp in trackpoints])) |> Float64
+
+    # Find the real highest heart rate from all trackpoints
+    max_hr = maximum(filter(hr -> hr !== nothing, [tp.heart_rate_bpm for tp in trackpoints])) |> Float64
+
+    # Filter out zero and missing cadence values (Zero Averaging ON)
+    avg_cadence_zero_avg_on = mean(filter(cadence -> cadence > 0, [tp.cadence for tp in trackpoints if tp.cadence !== nothing]))
+
+    # Include zeros (Zero Averaging OFF)
+    avg_cadence_zero_avg_off = mean([tp.cadence !== nothing ? tp.cadence : 0 for tp in trackpoints]) |> Float64
+
+    # Find the real highest cadence from all trackpoints
+    max_cadence = maximum(filter(cadence -> cadence !== nothing, [tp.cadence for tp in trackpoints])) |> Int
+
+    # Filter out missing speed values
+    avg_speed = mean(filter(!ismissing, [tp.speed for tp in trackpoints if tp.speed !== nothing]))
+
+    # Calculate total ascent, descent, and max altitude
+    ascent = 0.0
+    descent = 0.0
+    max_altitude = maximum([tp.altitude_meters for tp in trackpoints if tp.altitude_meters !== nothing])
+
+    for i in 2:length(trackpoints)
+        alt_diff = trackpoints[i].altitude_meters - trackpoints[i - 1].altitude_meters
+        if alt_diff > 0
+            ascent += alt_diff
+        else
+            descent += abs(alt_diff)
+        end
+    end
+
+    # Calculate watts averages
+    avg_watts_zero_avg_on = mean(filter(watts -> watts > 0, [tp.watts for tp in trackpoints if tp.watts !== nothing]))
+    avg_watts_zero_avg_off = mean([tp.watts !== nothing ? tp.watts : 0 for tp in trackpoints]) |> Float64
+    max_watts = maximum(filter(watts -> watts !== nothing, [tp.watts for tp in trackpoints])) |> Float64
 
     return (
         total_time,
         total_distance,
-        avg_max_speed,
+        max_speed,
         total_calories,
-        avg_avg_hr,
-        avg_max_hr,
-        avg_cadence,
-        avg_avg_speed
+        avg_hr,
+        max_hr,
+        avg_cadence_zero_avg_on,
+        avg_cadence_zero_avg_off,
+        max_cadence,
+        avg_speed,
+        ascent,
+        descent,
+        max_altitude,
+        avg_watts_zero_avg_on,
+        avg_watts_zero_avg_off,
+        max_watts
     )
 end
 
@@ -348,10 +393,14 @@ function loadTCXFile(filepath::String, csv_filepath::Union{String,Nothing}=nothi
         device_info = parseDeviceInfo(doc)
 
         # Calculate averages and totals for the activity
-        total_time, total_distance, avg_max_speed, total_calories, avg_avg_hr, avg_max_hr, avg_cadence, avg_avg_speed = calculate_averages_and_totals(parsed_laps)
+        total_time, total_distance, max_speed, total_calories, avg_hr, max_hr, avg_cadence_zero_avg_on, avg_cadence_zero_avg_off, max_cadence, avg_speed, ascent, descent, max_altitude, avg_watts_zero_avg_on, avg_watts_zero_avg_off, max_watts = calculate_averages_and_totals(parsed_laps)
 
         # Create TCXActivity with averages and totals
-        activity = TCXActivity(sport, id, parsed_laps, device_info, total_time, total_distance, avg_max_speed, total_calories, avg_avg_hr, avg_max_hr, avg_cadence, avg_avg_speed)
+        activity = TCXActivity(
+            sport, id, parsed_laps, device_info, total_time, total_distance, max_speed, total_calories, avg_hr, max_hr,
+            avg_cadence_zero_avg_on, avg_cadence_zero_avg_off, max_cadence, avg_speed, ascent, descent, max_altitude,
+            avg_watts_zero_avg_on, avg_watts_zero_avg_off, max_watts
+        )
 
         push!(activities, activity)
     end

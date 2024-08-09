@@ -30,7 +30,6 @@ using Statistics
     end
 end
 
-
 @testset "TCX Component Parsing" begin
     xml_str = """
     <TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" xmlns:ns3="http://www.garmin.com/xmlschemas/ActivityExtension/v2">
@@ -109,14 +108,52 @@ end
         end
     end
 
-    # @testset "parseTCXAuthor" begin
-    #     author = TCXReader.parseTCXAuthor(doc)
-    #     @test author.name == "Garmin Connect API"
-    #     @test author.build.versionMajor == 17
-    #     @test author.build.versionMinor == 20
-    #     @test author.langID == "en"
-    #     @test author.partNumber == "006-D2449-00"
-    # end
+    @testset "Calculate Averages and Totals" begin
+        # Create a set of trackpoints
+        trackPoints = [
+            TCXTrackPoint(DateTime(2021, 1, 1, 12), 45.0, 13.0, 100.0, 1000.0, 150, 80, 2.5, 200),
+            TCXTrackPoint(DateTime(2021, 1, 1, 12, 10), 45.1, 13.1, 105.0, 1500.0, 155, 90, 2.6, 210),
+            TCXTrackPoint(DateTime(2021, 1, 1, 12, 20), 45.2, 13.2, 110.0, 2000.0, 160, 100, 2.7, 220),
+            TCXTrackPoint(DateTime(2021, 1, 1, 12, 30), 45.3, 13.3, 115.0, 2500.0, 165, 110, 2.8, 230),
+            TCXTrackPoint(DateTime(2021, 1, 1, 12, 40), 45.4, 13.4, 120.0, 3000.0, 170, 0, 2.9, 240) # Cadence 0 for testing zero averaging
+        ]
+
+        # Create a lap
+        lap = TCXLap(
+            DateTime(2021, 1, 1, 12),
+            totalTimeSeconds = 3600.0,
+            distanceMeters = 3000.0,
+            maximumSpeed = 3.0,
+            calories = 500,
+            averageHeartRateBpm = 160,
+            maximumHeartRateBpm = 170,
+            intensity = "Active",
+            cadence = 90,
+            trackPoints = trackPoints,
+            triggerMethod = "Manual",
+            avgSpeed = 2.75
+        )
+
+        # Calculate averages and totals
+        total_time, total_distance, max_speed, total_calories, avg_hr, max_hr, avg_cadence_zero_avg_on, avg_cadence_zero_avg_off, avg_speed, total_ascent, total_descent, max_altitude, avg_watts_zero_avg_on, avg_watts_zero_avg_off, max_watts, max_cadence = TCXReader.calculate_averages_and_totals([lap])
+
+        @test total_time == 3600.0
+        @test total_distance == 3000.0
+        @test max_speed == 3.0
+        @test total_calories == 500.0
+        @test avg_hr == 160.0
+        @test max_hr == 170.0
+        @test avg_cadence_zero_avg_on ≈ 95.0  # Average without considering cadence 0
+        @test avg_cadence_zero_avg_off ≈ 76.0  # Average considering cadence 0
+        @test avg_speed ≈ 2.7  # Average speed
+        @test total_ascent == 20.0  # Ascent from 100m to 120m
+        @test total_descent == 0.0  # No descent in this data
+        @test max_altitude == 120.0  # Highest altitude
+        @test avg_watts_zero_avg_on ≈ 220.0  # Average watts without considering zeros
+        @test avg_watts_zero_avg_off ≈ 176.0  # Average watts considering zeros
+        @test max_watts == 240.0  # Maximum watts
+        @test max_cadence == 110  # Maximum cadence
+    end
 
     @testset "TCXReader Tests -> exportCSV" begin
         author = TCXAuthor("Test Author", BuildVersion(1, 0, 0, 0), "en-US", "000-00000-00")
@@ -124,8 +161,28 @@ end
             TCXTrackPoint(DateTime(2021, 1, 1, 12), 45.0, 13.0, 100.0, 1000.0, 150, 100, 2.5, 200),
             TCXTrackPoint(DateTime(2021, 1, 1, 12, 30), 45.1, 13.1, 105.0, 1500.0, 155, 101, 2.6, 201)
         ]
-        lap = TCXLap(DateTime(2021, 1, 1, 12), totalTimeSeconds=1800.0, distanceMeters=5000.0, maximumSpeed=3.0, calories=250, averageHeartRateBpm=150, maximumHeartRateBpm=160, intensity="Active", cadence=85, trackPoints=trackPoints, triggerMethod="Manual", avgSpeed=2.75)
-        activities = [TCXActivity("Biking", DateTime(2021, 1, 1, 12), [lap], DeviceInfo("Garmin Edge 530", "123456789", 1, "1.0"), 1800.0, 5000.0, 3.0, 250.0, 150.0, 160.0, 85.0, 2.75)]
+        lap = TCXLap(
+            DateTime(2021, 1, 1, 12),
+            totalTimeSeconds = 1800.0,
+            distanceMeters = 5000.0,
+            maximumSpeed = 3.0,
+            calories = 250,
+            averageHeartRateBpm = 150,
+            maximumHeartRateBpm = 160,
+            intensity = "Active",
+            cadence = 85,
+            trackPoints = trackPoints,
+            triggerMethod = "Manual",
+            avgSpeed = 2.75
+        )
+        activities = [
+            TCXActivity(
+                "Biking", DateTime(2021, 1, 1, 12), [lap],
+                DeviceInfo("Garmin Edge 530", "123456789", 1, "1.0"),
+                1800.0, 5000.0, 3.0, 250.0, 150.0, 160.0, 85.0,
+                2.75, 0.0, 0.0, 105.0, 150.0, 200.0, 101.0
+            )
+        ]
 
         csv_filepath = "exported_data.csv"
 

@@ -3,7 +3,14 @@ using TCXReader
 using Dates
 
 @testset "TCXActivity Tests" begin
-    activity = TCXActivity("Biking", DateTime(2021, 1, 1, 12), Vector{TCXLap}(), DeviceInfo("Garmin", "123", 456, "1.0"), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+    activity = TCXActivity(
+        "Biking",
+        DateTime(2021, 1, 1, 12),
+        Vector{TCXLap}(),
+        DeviceInfo("Garmin", "123", 456, "1.0"),
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+        0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+    )
 
     @test activity.sport == "Biking"
     @test activity.id == DateTime(2021, 1, 1, 12)
@@ -14,10 +21,18 @@ using Dates
     @test activity.device.version == "1.0"
     @test activity.total_time == 0.0
     @test activity.total_distance == 0.0
-    @test activity.avg_max_speed == 0.0
+    @test activity.max_speed == 0.0
     @test activity.total_calories == 0.0
-    @test activity.avg_avg_hr == 0.0
-    @test activity.avg_max_hr == 0.0
-    @test activity.avg_cadence == 0.0
-    @test activity.avg_avg_speed == 0.0
+    @test activity.avg_hr == 0.0
+    @test activity.max_hr == 0.0
+    @test activity.avg_cadence_zero_avg_on == 0.0
+    @test activity.avg_cadence_zero_avg_off == 0.0
+    @test activity.avg_speed == 0.0
+    @test activity.total_ascent == 0.0
+    @test activity.total_descent == 0.0
+    @test activity.max_altitude == 0.0
+    @test activity.avg_watts_zero_avg_on == 0.0
+    @test activity.avg_watts_zero_avg_off == 0.0
+    @test activity.max_watts == 0.0
+    @test activity.max_cadence == 0.0
 end
