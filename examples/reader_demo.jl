@@ -42,7 +42,7 @@ function main()
     end
 
     # Load a TCX file and export the data to CSV
-    # author, activities = loadTCXFile("../example_data/15.tcx", "tcx_data_export.csv")
+    author, activities = loadTCXFile("../example_data/23.tcx", "tcx_data_export.csv")
 end
 
 main()

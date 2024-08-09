@@ -15,10 +15,10 @@ TCXReader.jl is a Julia package designed to simplify the process of reading and 
 ## Detailed insights ✨
 🚀
 - **TCXReader** is a Julia package that provides a simple interface for reading and processing .tcx files, commonly used by Garmin devices and other GPS-enabled fitness devices to store workout data.
-- **TCXActivity**: Access metadata about the workout, including the activity type, start time, and total distance.
+- **TCXActivity**: Access metadata about the workout, including the activity type, start time, total distance, max speed, average/max heart rate, average/max cadence, average/max watts, total ascent, total descent, and max altitude.
 - **TCXAuthor**: Retrieve information about the author of the workout, including name, build version, language ID, and part number.
-- **TCXLap**: Retrieve information about laps within a workout, including start and end times, total distance, and total time.
-- **TCXTrackPoint**: Access detailed information about each trackpoint in a workout, including time, latitude, longitude, altitude, and heart rate.
+- **TCXLap**: Retrieve information about laps within a workout, including start and end times, total distance, total time, and maximum speed.
+- **TCXTrackPoint**: Access detailed information about each trackpoint in a workout, including time, latitude, longitude, altitude, heart rate, cadence, speed, and watts.
 
 ## Installation 📦
 
@@ -59,6 +59,24 @@ function main()
         println("Device Name: ", activity.device.name)
         println("Device Version: ", activity.device.version)
 
+        # Display overall metrics for the activity
+        println("Total Time (seconds): ", activity.total_time)
+        println("Total Distance (meters): ", activity.total_distance)
+        println("Maximum Speed: ", activity.max_speed)
+        println("Total Calories: ", activity.total_calories)
+        println("Average Heart Rate (BPM): ", activity.avg_hr)
+        println("Maximum Heart Rate (BPM): ", activity.max_hr)
+        println("Average Cadence (Zero Averaging ON): ", activity.avg_cadence_zero_avg_on)
+        println("Average Cadence (Zero Averaging OFF): ", activity.avg_cadence_zero_avg_off)
+        println("Max Cadence: ", activity.max_cadence)
+        println("Average Speed: ", activity.avg_speed)
+        println("Total Ascent (meters): ", activity.total_ascent)
+        println("Total Descent (meters): ", activity.total_descent)
+        println("Max Altitude (meters): ", activity.max_altitude)
+        println("Average Watts (Zero Averaging ON): ", activity.avg_watts_zero_avg_on)
+        println("Average Watts (Zero Averaging OFF): ", activity.avg_watts_zero_avg_off)
+        println("Max Watts: ", activity.max_watts)
+
         # Display information about each lap within the activity
         println("\nLaps and Track Points:")
         for (i, lap) in enumerate(activity.laps)
@@ -75,6 +93,7 @@ function main()
 end
 
 main()
+
 ```
 
 ## Datasets
