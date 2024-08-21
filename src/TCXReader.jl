@@ -299,37 +299,43 @@ Calculate the total values for time, distance, and calories, and average values 
 - A tuple containing total values for time, distance, calories, ascent, descent, and average values for maximum speed, average heart rate, maximum heart rate, cadence (Zero Averaging ON and OFF), maximum cadence, average speed, max altitude, average watts (Zero Averaging ON and OFF), and max watts.
 """
 function calculate_averages_and_totals(lap_data::Vector{TCXLap})
+    # Calculate total time, distance, and calories with fallback to 0 for Nothing values
     total_time = sum([lap.totalTimeSeconds !== nothing ? lap.totalTimeSeconds : 0 for lap in lap_data])
     total_distance = sum([lap.distanceMeters !== nothing ? lap.distanceMeters : 0 for lap in lap_data])
     total_calories = sum([lap.calories !== nothing ? lap.calories : 0 for lap in lap_data]) |> Float64
 
     trackpoints = vcat([lap.trackPoints for lap in lap_data]...)
 
-    # Real average heart rate across all trackpoints
-    avg_hr = mean(filter(hr -> hr !== nothing, [tp.heart_rate_bpm for tp in trackpoints])) |> Float64
+    # Calculate average heart rate, filtering out Nothing values
+    hr_values = filter(hr -> hr !== nothing, [tp.heart_rate_bpm for tp in trackpoints])
+    avg_hr = isempty(hr_values) ? 0.0 : mean(hr_values) |> Float64
 
-    # Find the real highest speed from all trackpoints
-    max_speed = maximum(filter(speed -> speed !== nothing, [tp.speed for tp in trackpoints])) |> Float64
+    # Find the maximum speed, filtering out Nothing values
+    speed_values = filter(speed -> speed !== nothing, [tp.speed for tp in trackpoints])
+    max_speed = isempty(speed_values) ? 0.0 : maximum(speed_values) |> Float64
 
-    # Find the real highest heart rate from all trackpoints
-    max_hr = maximum(filter(hr -> hr !== nothing, [tp.heart_rate_bpm for tp in trackpoints])) |> Float64
+    # Find the maximum heart rate, filtering out Nothing values
+    max_hr = isempty(hr_values) ? 0.0 : maximum(hr_values) |> Float64
 
-    # Filter out zero and missing cadence values (Zero Averaging ON)
-    avg_cadence_zero_avg_on = mean(filter(cadence -> cadence > 0, [tp.cadence for tp in trackpoints if tp.cadence !== nothing]))
+    # Calculate average cadence with Zero Averaging ON, filtering out zero and Nothing values
+    cadence_values_zero_on = filter(cadence -> cadence > 0, [tp.cadence for tp in trackpoints if tp.cadence !== nothing])
+    avg_cadence_zero_avg_on = isempty(cadence_values_zero_on) ? 0.0 : mean(cadence_values_zero_on)
 
-    # Include zeros (Zero Averaging OFF)
-    avg_cadence_zero_avg_off = mean([tp.cadence !== nothing ? tp.cadence : 0 for tp in trackpoints]) |> Float64
+    # Calculate average cadence with Zero Averaging OFF, assigning 0 for Nothing values
+    cadence_values = [tp.cadence !== nothing ? tp.cadence : 0 for tp in trackpoints]
+    avg_cadence_zero_avg_off = mean(cadence_values) |> Float64
 
-    # Find the real highest cadence from all trackpoints
-    max_cadence = maximum(filter(cadence -> cadence !== nothing, [tp.cadence for tp in trackpoints])) |> Int
+    # Find the maximum cadence, filtering out Nothing values
+    max_cadence = isempty(cadence_values_zero_on) ? 0 : maximum(cadence_values_zero_on) |> Int
 
-    # Filter out missing speed values
-    avg_speed = mean(filter(!ismissing, [tp.speed for tp in trackpoints if tp.speed !== nothing]))
+    # Calculate average speed, filtering out Nothing values
+    avg_speed = isempty(speed_values) ? 0.0 : mean(speed_values)
 
-    # Calculate total ascent, descent, and max altitude
+    # Calculate total ascent, descent, and max altitude, handling Nothing values
     ascent = 0.0
     descent = 0.0
-    max_altitude = maximum([tp.altitude_meters for tp in trackpoints if tp.altitude_meters !== nothing])
+    altitude_values = [tp.altitude_meters !== nothing ? tp.altitude_meters : 0 for tp in trackpoints]
+    max_altitude = maximum(altitude_values)
 
     for i in 2:length(trackpoints)
         alt_diff = trackpoints[i].altitude_meters - trackpoints[i - 1].altitude_meters
@@ -340,10 +346,16 @@ function calculate_averages_and_totals(lap_data::Vector{TCXLap})
         end
     end
 
-    # Calculate watts averages
-    avg_watts_zero_avg_on = mean(filter(watts -> watts > 0, [tp.watts for tp in trackpoints if tp.watts !== nothing]))
-    avg_watts_zero_avg_off = mean([tp.watts !== nothing ? tp.watts : 0 for tp in trackpoints]) |> Float64
-    max_watts = maximum(filter(watts -> watts !== nothing, [tp.watts for tp in trackpoints])) |> Float64
+    # Calculate watts averages with Zero Averaging ON, filtering out zero and Nothing values
+    watts_values_zero_on = filter(watts -> watts > 0, [tp.watts for tp in trackpoints if tp.watts !== nothing])
+    avg_watts_zero_avg_on = isempty(watts_values_zero_on) ? 0.0 : mean(watts_values_zero_on)
+
+    # Calculate watts averages with Zero Averaging OFF, assigning 0 for Nothing values
+    watts_values = [tp.watts !== nothing ? tp.watts : 0 for tp in trackpoints]
+    avg_watts_zero_avg_off = mean(watts_values) |> Float64
+
+    # Find the maximum watts, filtering out Nothing values
+    max_watts = isempty(watts_values_zero_on) ? 0.0 : maximum(watts_values_zero_on) |> Float64
 
     return (
         total_time,

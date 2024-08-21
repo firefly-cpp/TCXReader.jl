@@ -123,7 +123,7 @@ end
             DateTime(2021, 1, 1, 12),
             totalTimeSeconds = 3600.0,
             distanceMeters = 3000.0,
-            maximumSpeed = 2.9,  # Ensure this matches the test expectation
+            maximumSpeed = 2.9,
             calories = 500,
             averageHeartRateBpm = 160,
             maximumHeartRateBpm = 170,

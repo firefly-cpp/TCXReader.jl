@@ -3,7 +3,7 @@ include("../src/TCXReader.jl")
 using .TCXReader: loadTCXFile
 
 function main()
-    author, activities = loadTCXFile("../example_data/23.tcx")
+    author, activities = loadTCXFile("../example_data/15.tcx")
 
     # Displaying author information
     println("Author Information:")
