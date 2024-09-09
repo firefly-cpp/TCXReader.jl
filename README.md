@@ -1,32 +1,46 @@
-<div width="200" style="background-color: white; width: 200px">
- <img width="200" style="margin-bottom:-8px" src="https://raw.githubusercontent.com/firefly-cpp/TCXreader.jl/main/.github/logo/tcxreader_jl.webp">
-</div>
+<p align="center">
+    <img width="200" src=".github/logo/tcxreader_jl.webp">
+</p>
 
-# TCXReader.jl -- A parser for TCX files
+<h1 align="center">
+TCXReader.jl -- A parser for TCX files
+</h1>
 
-[![GitHub license](https://img.shields.io/github/license/firefly-cpp/TCXReader.jl.svg)](https://github.com/firefly-cpp/TCXReader.jl/blob/master/LICENSE)
-![GitHub commit activity](https://img.shields.io/github/commit-activity/w/firefly-cpp/TCXReader.jl.svg)
-[![version](https://juliahub.com/docs/General/TCXReader/stable/version.svg)](https://juliahub.com/ui/Packages/General/TCXReader)
+<p align="center">
+    <a href="https://juliahub.com/ui/Packages/General/TCXReader">
+        <img alt="Version" src="https://juliahub.com/docs/General/TCXReader/stable/version.svg">
+    </a>
+    <a href="https://github.com/firefly-cpp/TCXReader.jl/blob/master/LICENSE">
+        <img alt="GitHub License" src="https://img.shields.io/github/license/firefly-cpp/TCXReader.jl.svg">
+    </a>
+    <img alt="GitHub Commit Activity" src="https://img.shields.io/github/commit-activity/w/firefly-cpp/TCXReader.jl.svg">
+</p>
 
-## About 📋
+<p align="center">
+    <a href="#-detailed-insights">✨ Detailed insights</a> •
+    <a href="#-installation">📦 Installation</a> •
+    <a href="#-usage">🚀 Usage</a> •
+    <a href="#️-datasets">🗃️ Datasets</a> •
+    <a href="#-related-packagesframeworks">🔗 Related packages/frameworks</a> •
+    <a href="#-license">🔑 License</a>
+</p>
 
 TCXReader.jl is a Julia package designed to simplify the process of reading and processing .tcx files, commonly used by Garmin devices and other GPS-enabled fitness devices to store workout data. This package allows Julia developers and data scientists to easily import, analyze, and transform training data for further analysis and visualization. With support for key TCX data elements such as track points, laps, activities, and device information, TCXReader.jl provides a comprehensive toolset for accessing the rich data captured during workouts.
 
-## Detailed insights ✨
-🚀
+## ✨ Detailed insights
 - **TCXReader** is a Julia package that provides a simple interface for reading and processing .tcx files, commonly used by Garmin devices and other GPS-enabled fitness devices to store workout data.
 - **TCXActivity**: Access metadata about the workout, including the activity type, start time, total distance, max speed, average/max heart rate, average/max cadence, average/max watts, total ascent, total descent, and max altitude.
 - **TCXAuthor**: Retrieve information about the author of the workout, including name, build version, language ID, and part number.
 - **TCXLap**: Retrieve information about laps within a workout, including start and end times, total distance, total time, and maximum speed.
 - **TCXTrackPoint**: Access detailed information about each trackpoint in a workout, including time, latitude, longitude, altitude, heart rate, cadence, speed, and watts.
 
-## Installation 📦
+## 📦 Installation
 
 ```
 pkg> add TCXReader
 ```
 
-## Usage 🚀
+## 🚀 Usage
 
 ```julia
 using TCXReader: loadTCXFile
@@ -96,11 +110,11 @@ main()
 
 ```
 
-## Datasets
+## 🗃️ Datasets
 
 Datasets available and used in the examples on the following links: [DATASET1](http://iztok-jr-fister.eu/static/publications/Sport5.zip), [DATASET2](http://iztok-jr-fister.eu/static/css/datasets/Sport.zip), [DATASET3](https://github.com/firefly-cpp/tcx-test-files).
 
-## Related packages/frameworks
+## 🔗 Related packages/frameworks
 
 [1] [tcxreader: Python reader/parser for Garmin's TCX file format.](https://github.com/alenrajsp/tcxreader)
 
@@ -108,7 +122,7 @@ Datasets available and used in the examples on the following links: [DATASET1](h
 
 [3] [tcxread: A parser for TCX files written in Ruby](https://github.com/firefly-cpp/tcxread)
 
-## License
+## 🔑 License
 
 This package is distributed under the MIT License. This license can be found online at <http://www.opensource.org/licenses/MIT>.
 
