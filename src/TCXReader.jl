@@ -1,5 +1,7 @@
 module TCXReader
 
+__precompile__(false)
+
 using EzXML, CSV, DataFrames, Dates, Statistics
 
 export TCXTrackPoint, BuildVersion, TCXAuthor, TCXLap, TCXActivity, DeviceInfo, loadTCXFile, parseTCXAuthor, parseTCXLap, parseTCXTrackPoint, parseDeviceInfo, exportCSV, calculate_averages_and_totals
