@@ -104,7 +104,8 @@ function parseTCXLap(node::EzXML.Node)::TCXLap
     triggerMethod = parseOptionalString(node, ".//g:TriggerMethod")
     avgSpeed = parseOptionalFloat(node, ".//ns3:LX/ns3:AvgSpeed")
 
-    trackPoints = [parseTCXTrackPoint(tp) for tp in findall(".//g:Trackpoint", node, NS_MAP)]
+    # Only include trackpoints that are not `nothing`
+    trackPoints = [tp for tp in [parseTCXTrackPoint(tp_node) for tp_node in findall(".//g:Trackpoint", node, NS_MAP)] if tp !== nothing]
 
     return TCXLap(startTime, totalTimeSeconds=totalTimeSeconds, distanceMeters=distanceMeters, maximumSpeed=maximumSpeed,
         calories=calories, averageHeartRateBpm=averageHeartRateBpm, maximumHeartRateBpm=maximumHeartRateBpm,
@@ -122,10 +123,16 @@ Parse a TCX track point node into a `TCXTrackPoint` object.
 # Returns
 - `TCXTrackPoint` object.
 """
-function parseTCXTrackPoint(node::EzXML.Node)::TCXTrackPoint
+function parseTCXTrackPoint(node::EzXML.Node)::Union{TCXTrackPoint, Nothing}
     time = parseDateTime(nodecontent(findfirst(".//g:Time", node, NS_MAP)))
     latitude = parseOptionalFloat(node, ".//g:Position/g:LatitudeDegrees")
     longitude = parseOptionalFloat(node, ".//g:Position/g:LongitudeDegrees")
+
+    # Skip this trackpoint if either latitude or longitude is missing
+    if isnothing(latitude) || isnothing(longitude)
+        return nothing  # Return nothing to indicate this trackpoint should be skipped
+    end
+
     altitude_meters = parseOptionalFloat(node, ".//g:AltitudeMeters")
     distance_meters = parseOptionalFloat(node, ".//g:DistanceMeters")
     heart_rate_bpm = parseOptionalInt(node, ".//g:HeartRateBpm/g:Value")
