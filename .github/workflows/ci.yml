@@ -7,16 +7,16 @@ on:
     branches:
       - main
     tags: ["*"]
+
 jobs:
-  test:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
+  test_stable:
+    name: Julia Stable ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         version:
-          - '1.9'
-          - 'nightly'
+          - '1.9'  # Use stable version
         os:
           - ubuntu-latest
         arch:
@@ -34,6 +34,29 @@ jobs:
       - uses: codecov/codecov-action@v3
         with:
           file: lcov.info
+
+  test_nightly:
+    name: Julia Nightly ${{ matrix.os }} - ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+        arch:
+          - x64
+    steps:
+      - uses: actions/checkout@v3
+      - uses: julia-actions/setup-julia@v1
+        with:
+          version: 'nightly'
+          arch: ${{ matrix.arch }}
+      - run: julia --project=@. -e 'using Pkg; Pkg.build(); Pkg.precompile()'
+        continue-on-error: true # Prevent failures from stopping the job
+      - uses: julia-actions/cache@v1
+      - uses: julia-actions/julia-buildpkg@v1
+      - uses: julia-actions/julia-runtest@v1
+
   docs:
     name: Documentation
     runs-on: ubuntu-latest
