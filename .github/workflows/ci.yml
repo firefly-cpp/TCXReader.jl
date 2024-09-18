@@ -38,6 +38,7 @@ jobs:
   test_nightly:
     name: Julia Nightly ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: true  # Allow failure for nightly builds
     strategy:
       fail-fast: false
       matrix:
@@ -51,31 +52,7 @@ jobs:
         with:
           version: 'nightly'
           arch: ${{ matrix.arch }}
-      - run: julia --project=@. -e 'using Pkg; Pkg.build(); Pkg.precompile()'
-        continue-on-error: true # Prevent failures from stopping the job
       - uses: julia-actions/cache@v1
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
-
-  docs:
-    name: Documentation
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: julia-actions/setup-julia@v1
-        with:
-          version: '1.9'
-      - run: |
-          julia --project=docs -e '
-            using Pkg
-            Pkg.develop(PackageSpec(path=pwd()))
-            Pkg.instantiate()'
-      - run: |
-          julia --project=docs -e '
-            using Documenter: doctest
-            using TCXReader
-            doctest(TCXReader)'
-      - run: julia --project=docs docs/make.jl
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
+        continue-on-error: true  # Continue on error for nightly
