@@ -1,7 +1,7 @@
 name = "TCXReader"
 uuid = "1acf2333-b1bd-424d-862d-25e89a4f23c1"
 authors = ["Tilen Hliš <tilen.hlis@gmail.com>", "Iztok Fister Jr. <iztok@iztok-jr-fister.eu>"]
-version = "0.2.0"
+version = "0.2.1"
 
 [deps]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
