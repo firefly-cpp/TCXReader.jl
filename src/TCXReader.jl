@@ -106,8 +106,11 @@ function parseTCXLap(node::EzXML.Node)::TCXLap
     triggerMethod = parseOptionalString(node, ".//g:TriggerMethod")
     avgSpeed = parseOptionalFloat(node, ".//ns3:LX/ns3:AvgSpeed")
 
-    # Only include trackpoints that are not `nothing`
-    trackPoints = [tp for tp in [parseTCXTrackPoint(tp_node) for tp_node in findall(".//g:Trackpoint", node, NS_MAP)] if tp !== nothing]
+    trackPoints = TCXTrackPoint[]
+        trackpoint_nodes = findall(".//g:Trackpoint", node, NS_MAP)
+        if !isempty(trackpoint_nodes)
+            trackPoints = [tp for tp in [parseTCXTrackPoint(tp_node) for tp_node in trackpoint_nodes] if tp !== nothing]
+        end
 
     return TCXLap(startTime, totalTimeSeconds=totalTimeSeconds, distanceMeters=distanceMeters, maximumSpeed=maximumSpeed,
         calories=calories, averageHeartRateBpm=averageHeartRateBpm, maximumHeartRateBpm=maximumHeartRateBpm,
@@ -126,23 +129,40 @@ Parse a TCX track point node into a `TCXTrackPoint` object.
 - `TCXTrackPoint` object.
 """
 function parseTCXTrackPoint(node::EzXML.Node)::Union{TCXTrackPoint, Nothing}
-    time = parseDateTime(nodecontent(findfirst(".//g:Time", node, NS_MAP)))
-    latitude = parseOptionalFloat(node, ".//g:Position/g:LatitudeDegrees")
-    longitude = parseOptionalFloat(node, ".//g:Position/g:LongitudeDegrees")
+    try
+        time = parseDateTime(nodecontent(findfirst(".//g:Time", node, NS_MAP)))
 
-    # Skip this trackpoint if either latitude or longitude is missing
-    if isnothing(latitude) || isnothing(longitude)
-        return nothing  # Return nothing to indicate this trackpoint should be skipped
+        latitude = parseOptionalFloat(node, ".//g:Position/g:LatitudeDegrees")
+        longitude = parseOptionalFloat(node, ".//g:Position/g:LongitudeDegrees")
+
+        altitude_meters = parseOptionalFloat(node, ".//g:AltitudeMeters")
+        distance_meters = parseOptionalFloat(node, ".//g:DistanceMeters")
+
+        heart_rate_bpm_node = findfirst(".//g:HeartRateBpm/g:Value", node, NS_MAP)
+        heart_rate_bpm = heart_rate_bpm_node !== nothing ? parseOptionalInt(node, ".//g:HeartRateBpm/g:Value") : nothing
+
+        cadence = parseOptionalInt(node, ".//g:Cadence")
+
+        tpx_node = findfirst(".//ns3:TPX", node, NS_MAP)
+        speed = nothing
+        watts = nothing
+
+        if tpx_node !== nothing
+            speed_node = findfirst(".//ns3:Speed", tpx_node, NS_MAP)
+            speed = speed_node !== nothing ? parseOptionalFloat(tpx_node, ".//ns3:Speed") : nothing
+
+            watts_node = findfirst(".//ns3:Watts", tpx_node, NS_MAP)
+            watts = watts_node !== nothing ? parseOptionalInt(tpx_node, ".//ns3:Watts") : nothing
+        else
+            @debug "Empty <ns3:TPX> tag found at time $time."
+        end
+
+        return TCXTrackPoint(time, latitude, longitude, altitude_meters, distance_meters, heart_rate_bpm, cadence, speed, watts)
+
+    catch e
+        @warn "Error parsing trackpoint: $e. Skipping this trackpoint."
+        return nothing
     end
-
-    altitude_meters = parseOptionalFloat(node, ".//g:AltitudeMeters")
-    distance_meters = parseOptionalFloat(node, ".//g:DistanceMeters")
-    heart_rate_bpm = parseOptionalInt(node, ".//g:HeartRateBpm/g:Value")
-    cadence = parseOptionalInt(node, ".//g:Cadence")
-    speed = parseOptionalFloat(node, ".//ns3:TPX/ns3:Speed")
-    watts = parseOptionalInt(node, ".//ns3:TPX/ns3:Watts")
-
-    return TCXTrackPoint(time, latitude, longitude, altitude_meters, distance_meters, heart_rate_bpm, cadence, speed, watts)
 end
 
 """
@@ -308,46 +328,45 @@ Calculate the total values for time, distance, and calories, and average values 
 - A tuple containing total values for time, distance, calories, ascent, descent, and average values for maximum speed, average heart rate, maximum heart rate, cadence (Zero Averaging ON and OFF), maximum cadence, average speed, max altitude, average watts (Zero Averaging ON and OFF), and max watts.
 """
 function calculate_averages_and_totals(lap_data::Vector{TCXLap})
-    # Calculate total time, distance, and calories with fallback to 0 for Nothing values
+
     total_time = sum([lap.totalTimeSeconds !== nothing ? lap.totalTimeSeconds : 0 for lap in lap_data])
     total_distance = sum([lap.distanceMeters !== nothing ? lap.distanceMeters : 0 for lap in lap_data])
     total_calories = sum([lap.calories !== nothing ? lap.calories : 0 for lap in lap_data]) |> Float64
 
     trackpoints = vcat([lap.trackPoints for lap in lap_data]...)
 
-    # Calculate average heart rate, filtering out Nothing values
+    if isempty(trackpoints)
+        return (
+            total_time, total_distance, 0.0, total_calories, 0.0, 0.0, 0.0, 0.0, 0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
+        )
+    end
+
     hr_values = filter(hr -> hr !== nothing, [tp.heart_rate_bpm for tp in trackpoints])
     avg_hr = isempty(hr_values) ? 0.0 : mean(hr_values) |> Float64
 
-    # Find the maximum speed, filtering out Nothing values
     speed_values = filter(speed -> speed !== nothing, [tp.speed for tp in trackpoints])
     max_speed = isempty(speed_values) ? 0.0 : maximum(speed_values) |> Float64
 
-    # Find the maximum heart rate, filtering out Nothing values
     max_hr = isempty(hr_values) ? 0.0 : maximum(hr_values) |> Float64
 
-    # Calculate average cadence with Zero Averaging ON, filtering out zero and Nothing values
     cadence_values_zero_on = filter(cadence -> cadence > 0, [tp.cadence for tp in trackpoints if tp.cadence !== nothing])
     avg_cadence_zero_avg_on = isempty(cadence_values_zero_on) ? 0.0 : mean(cadence_values_zero_on)
 
-    # Calculate average cadence with Zero Averaging OFF, assigning 0 for Nothing values
     cadence_values = [tp.cadence !== nothing ? tp.cadence : 0 for tp in trackpoints]
     avg_cadence_zero_avg_off = mean(cadence_values) |> Float64
 
-    # Find the maximum cadence, filtering out Nothing values
     max_cadence = isempty(cadence_values_zero_on) ? 0 : maximum(cadence_values_zero_on) |> Int
 
-    # Calculate average speed, filtering out Nothing values
     avg_speed = isempty(speed_values) ? 0.0 : mean(speed_values)
 
-    # Calculate total ascent, descent, and max altitude, handling Nothing values
+    altitude_values = filter(alt -> alt !== nothing, [tp.altitude_meters for tp in trackpoints])
+    max_altitude = isempty(altitude_values) ? 0.0 : maximum(altitude_values)
+
     ascent = 0.0
     descent = 0.0
-    altitude_values = [tp.altitude_meters !== nothing ? tp.altitude_meters : 0 for tp in trackpoints]
-    max_altitude = maximum(altitude_values)
 
-    for i in 2:length(trackpoints)
-        alt_diff = trackpoints[i].altitude_meters - trackpoints[i - 1].altitude_meters
+    for i in 2:length(altitude_values)
+        alt_diff = altitude_values[i] - altitude_values[i - 1]
         if alt_diff > 0
             ascent += alt_diff
         else
@@ -355,15 +374,12 @@ function calculate_averages_and_totals(lap_data::Vector{TCXLap})
         end
     end
 
-    # Calculate watts averages with Zero Averaging ON, filtering out zero and Nothing values
     watts_values_zero_on = filter(watts -> watts > 0, [tp.watts for tp in trackpoints if tp.watts !== nothing])
     avg_watts_zero_avg_on = isempty(watts_values_zero_on) ? 0.0 : mean(watts_values_zero_on)
 
-    # Calculate watts averages with Zero Averaging OFF, assigning 0 for Nothing values
     watts_values = [tp.watts !== nothing ? tp.watts : 0 for tp in trackpoints]
     avg_watts_zero_avg_off = mean(watts_values) |> Float64
 
-    # Find the maximum watts, filtering out Nothing values
     max_watts = isempty(watts_values_zero_on) ? 0.0 : maximum(watts_values_zero_on) |> Float64
 
     return (
