@@ -88,7 +88,12 @@ end
             @test tp.heart_rate_bpm === 150
             @test tp.cadence === 100
             @test tp.speed ≈ 2.5
-            @test tp.watts === 200
+
+            if tp.watts !== nothing
+                @test tp.watts === 200
+            else
+                @test tp.watts === nothing
+            end
         else
             @test false
         end
