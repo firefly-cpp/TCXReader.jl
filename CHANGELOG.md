@@ -1,8 +1,28 @@
 # Changelog
 
-## [Unreleased](https://github.com/firefly-cpp/TCXReader.jl/tree/HEAD)
+## [v0.2.3](https://github.com/firefly-cpp/TCXReader.jl/tree/v0.2.3) (2024-10-17)
 
-[Full Changelog](https://github.com/firefly-cpp/TCXReader.jl/compare/v0.1.0...HEAD)
+[Full Changelog](https://github.com/firefly-cpp/TCXReader.jl/compare/v0.2.2...v0.2.3)
+
+## [v0.2.2](https://github.com/firefly-cpp/TCXReader.jl/tree/v0.2.2) (2024-09-18)
+
+[Full Changelog](https://github.com/firefly-cpp/TCXReader.jl/compare/v0.2.1...v0.2.2)
+
+**Merged pull requests:**
+
+- README [\#9](https://github.com/firefly-cpp/TCXReader.jl/pull/9) ([lahovniktadej](https://github.com/lahovniktadej))
+
+## [v0.2.1](https://github.com/firefly-cpp/TCXReader.jl/tree/v0.2.1) (2024-08-21)
+
+[Full Changelog](https://github.com/firefly-cpp/TCXReader.jl/compare/v0.2.0...v0.2.1)
+
+## [v0.2.0](https://github.com/firefly-cpp/TCXReader.jl/tree/v0.2.0) (2024-08-09)
+
+[Full Changelog](https://github.com/firefly-cpp/TCXReader.jl/compare/v0.1.1...v0.2.0)
+
+## [v0.1.1](https://github.com/firefly-cpp/TCXReader.jl/tree/v0.1.1) (2024-08-08)
+
+[Full Changelog](https://github.com/firefly-cpp/TCXReader.jl/compare/v0.1.0...v0.1.1)
 
 **Closed issues:**
 
