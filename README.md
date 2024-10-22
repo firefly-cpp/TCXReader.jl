@@ -122,6 +122,8 @@ Datasets available and used in the examples on the following links: [DATASET1](h
 
 [3] [tcxread: A parser for TCX files written in Ruby](https://github.com/firefly-cpp/tcxread)
 
+[4] [TCX2Graph.jl: Building Property Graphs from TCX Files](https://github.com/firefly-cpp/TCX2Graph.jl)
+
 ## 🔑 License
 
 This package is distributed under the MIT License. This license can be found online at <http://www.opensource.org/licenses/MIT>.
