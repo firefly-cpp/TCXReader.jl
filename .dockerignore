@@ -1,0 +1,9 @@
+.git
+.github
+.DS_Store
+docs
+test
+examples
+*.cov
+coverage
+lcov.info

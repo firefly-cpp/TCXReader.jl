@@ -1,12 +1,17 @@
 # Types
 
-## List of Types
+## File and device metadata
 
 ```@docs
-TCXReader.TCXTrackPoint
-TCXReader.TCXLap
-TCXReader.TCXActivity
-TCXReader.DeviceInfo
-TCXReader.TCXAuthor
 TCXReader.BuildVersion
+TCXReader.TCXAuthor
+TCXReader.DeviceInfo
+```
+
+## Workout data
+
+```@docs
+TCXReader.TCXActivity
+TCXReader.TCXLap
+TCXReader.TCXTrackPoint
 ```

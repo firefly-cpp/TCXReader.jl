@@ -1,18 +1,27 @@
 # Functions
 
-## List of Functions
+## Loading and exporting
 
 ```@docs
 TCXReader.loadTCXFile
-TCXReader.parseTCXAuthor
-TCXReader.parseTCXTrackPoint
-TCXReader.parseOptionalFloat
 TCXReader.exportCSV
+```
+
+## Parsing components
+
+These functions are exported for callers that need to parse an already-open XML document or node. Most applications should use [`loadTCXFile`](@ref).
+
+```@docs
+TCXReader.parseTCXAuthor
 TCXReader.parseTCXLap
-TCXReader.parseDateTime
+TCXReader.parseTCXTrackPoint
 TCXReader.parseDeviceInfo
-TCXReader.parseOptionalInt
-TCXReader.parseBuildVersion
-TCXReader.parseOptionalString
+```
+
+## Aggregation
+
+See [Calculation semantics](@ref) before relying on aggregate fields in downstream analysis.
+
+```@docs
 TCXReader.calculate_averages_and_totals
 ```

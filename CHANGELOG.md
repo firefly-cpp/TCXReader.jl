@@ -1,5 +1,30 @@
 # Changelog
 
+## [v0.3.0](https://github.com/firefly-cpp/TCXReader.jl/tree/v0.3.0) (2026-07-21)
+
+[Full Changelog](https://github.com/firefly-cpp/TCXReader.jl/compare/v0.2.3...v0.3.0)
+
+**Changed:**
+
+- Raised the minimum supported Julia version to 1.10 and enabled package precompilation.
+- Expanded and corrected API documentation, usage guidance, and calculation semantics.
+- Modernized the test, coverage, documentation, dependency-update, and TagBot workflows.
+
+**Added:**
+
+- A dependency-free `tcxreader` CLI for activity summaries and optional CSV export.
+- A non-root Docker image with multi-platform Docker Hub release automation.
+- Cross-platform CI, Aqua quality checks, Julia nightly testing, strict Documenter builds, and GitHub Pages deployment.
+
+**Fixed:**
+
+- Parsing sparse lap, build, author, and device metadata using the existing constructor defaults.
+- Parsing TCX timestamps with optional fractional seconds and UTC offsets.
+- Selecting each activity's own creator and reading speed and watts across multiple `TPX` extension elements.
+- Handling documents without an `Activities` element, track-point display formatting, hashing, the CSV header deprecation, and the bundled example.
+
+Aggregate calculations, exported types, and the trackpoint-row CSV schema remain compatible with v0.2.3.
+
 ## [v0.2.3](https://github.com/firefly-cpp/TCXReader.jl/tree/v0.2.3) (2024-10-17)
 
 [Full Changelog](https://github.com/firefly-cpp/TCXReader.jl/compare/v0.2.2...v0.2.3)

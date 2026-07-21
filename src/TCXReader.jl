@@ -1,7 +1,5 @@
 module TCXReader
 
-__precompile__(false)
-
 using EzXML, CSV, DataFrames, Dates, Statistics
 
 export TCXTrackPoint, BuildVersion, TCXAuthor, TCXLap, TCXActivity, DeviceInfo, loadTCXFile, parseTCXAuthor, parseTCXLap, parseTCXTrackPoint, parseDeviceInfo, exportCSV, calculate_averages_and_totals
@@ -68,49 +66,78 @@ function parseOptionalString(node, path)
 end
 
 """
-    parseDateTime(timeStr::String)
+    parseDateTime(timeStr::String) -> DateTime
 
-Parse a date-time string into a `DateTime` object. If the string is empty, return a default `DateTime` value.
+Parse an ISO-8601 timestamp. Fractional seconds are optional and may contain any
+number of digits; precision finer than milliseconds is truncated to match
+`DateTime`. A trailing `Z` or a `±HH:MM` offset is accepted, with offsets
+normalized to UTC. A timestamp without an offset is treated as UTC. An empty
+string returns the sentinel `DateTime(1, 1, 1)`.
 
-# Arguments
-- `timeStr`: The date-time string to parse.
-
-# Returns
-- `DateTime` object.
+Malformed non-empty timestamps throw `ArgumentError`.
 """
 function parseDateTime(timeStr::String)
-    isempty(timeStr) ? DateTime(1, 1, 1) : DateTime(timeStr, dateformat"yyyy-mm-ddTHH:MM:SS.sssZ")
+    value = strip(timeStr)
+    isempty(value) && return DateTime(1, 1, 1)
+
+    parsed = match(
+        r"^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})(?:\.(\d+))?([zZ]|[+-]\d{2}:\d{2})?$",
+        value,
+    )
+    parsed === nothing && throw(ArgumentError("invalid ISO-8601 timestamp: $timeStr"))
+
+    timestamp = DateTime(
+        string(parsed.captures[1], "T", parsed.captures[2]),
+        dateformat"yyyy-mm-ddTHH:MM:SS",
+    )
+
+    fraction = parsed.captures[3]
+    if fraction !== nothing
+        milliseconds = parse(Int, rpad(first(fraction, min(length(fraction), 3)), 3, '0'))
+        timestamp += Millisecond(milliseconds)
+    end
+
+    timezone = parsed.captures[4]
+    if timezone !== nothing && lowercase(timezone) != "z"
+        offset_hours = parse(Int, timezone[2:3])
+        offset_minutes = parse(Int, timezone[5:6])
+        if offset_hours > 14 || offset_minutes > 59 || (offset_hours == 14 && offset_minutes != 0)
+            throw(ArgumentError("invalid UTC offset in timestamp: $timeStr"))
+        end
+
+        direction = startswith(timezone, "+") ? 1 : -1
+        timestamp -= Minute(direction * (60 * offset_hours + offset_minutes))
+    end
+
+    return timestamp
 end
 
 """
-    parseTCXLap(node::EzXML.Node)::TCXLap
+    parseTCXLap(node::EzXML.Node) -> TCXLap
 
-Parse a TCX lap node into a `TCXLap` object.
-
-# Arguments
-- `node`: The XML node representing the lap.
-
-# Returns
-- `TCXLap` object.
+Parse a TCX `Lap` node. Missing start time, total time, distance, and
+calories use the existing `TCXLap` constructor defaults. Optional measurements
+remain `nothing`; malformed present numeric values throw an error. Malformed
+trackpoints are omitted according to [`parseTCXTrackPoint`](@ref).
 """
 function parseTCXLap(node::EzXML.Node)::TCXLap
-    startTime = parseDateTime(node["StartTime"])
-    totalTimeSeconds = parseOptionalFloat(node, ".//g:TotalTimeSeconds")
-    distanceMeters = parseOptionalFloat(node, ".//g:DistanceMeters")
-    maximumSpeed = parseOptionalFloat(node, ".//g:MaximumSpeed")
-    calories = parseOptionalInt(node, ".//g:Calories")
-    averageHeartRateBpm = parseOptionalInt(node, ".//g:AverageHeartRateBpm/g:Value")
-    maximumHeartRateBpm = parseOptionalInt(node, ".//g:MaximumHeartRateBpm/g:Value")
-    intensity = parseOptionalString(node, ".//g:Intensity")
-    cadence = parseOptionalInt(node, ".//g:Cadence")
-    triggerMethod = parseOptionalString(node, ".//g:TriggerMethod")
+    startTime = haskey(node, "StartTime") ? parseDateTime(node["StartTime"]) : DateTime(1, 1, 1)
+    totalTimeSeconds = something(parseOptionalFloat(node, "./g:TotalTimeSeconds"), 0.0)
+    distanceMeters = something(parseOptionalFloat(node, "./g:DistanceMeters"), 0.0)
+    maximumSpeed = parseOptionalFloat(node, "./g:MaximumSpeed")
+    calories = something(parseOptionalInt(node, "./g:Calories"), 0)
+    averageHeartRateBpm = parseOptionalInt(node, "./g:AverageHeartRateBpm/g:Value")
+    maximumHeartRateBpm = parseOptionalInt(node, "./g:MaximumHeartRateBpm/g:Value")
+    intensity = parseOptionalString(node, "./g:Intensity")
+    cadence = parseOptionalInt(node, "./g:Cadence")
+    triggerMethod = parseOptionalString(node, "./g:TriggerMethod")
     avgSpeed = parseOptionalFloat(node, ".//ns3:LX/ns3:AvgSpeed")
 
-    trackPoints = TCXTrackPoint[]
-        trackpoint_nodes = findall(".//g:Trackpoint", node, NS_MAP)
-        if !isempty(trackpoint_nodes)
-            trackPoints = [tp for tp in [parseTCXTrackPoint(tp_node) for tp_node in trackpoint_nodes] if tp !== nothing]
-        end
+    trackpoint_nodes = findall(".//g:Trackpoint", node, NS_MAP)
+    trackPoints = TCXTrackPoint[
+        trackpoint for trackpoint in (parseTCXTrackPoint(trackpoint_node) for trackpoint_node in trackpoint_nodes)
+        if trackpoint !== nothing
+    ]
 
     return TCXLap(startTime, totalTimeSeconds=totalTimeSeconds, distanceMeters=distanceMeters, maximumSpeed=maximumSpeed,
         calories=calories, averageHeartRateBpm=averageHeartRateBpm, maximumHeartRateBpm=maximumHeartRateBpm,
@@ -118,19 +145,18 @@ function parseTCXLap(node::EzXML.Node)::TCXLap
 end
 
 """
-    parseTCXTrackPoint(node::EzXML.Node)
+    parseTCXTrackPoint(node::EzXML.Node) -> Union{TCXTrackPoint, Nothing}
 
-Parse a TCX track point node into a `TCXTrackPoint` object.
-
-# Arguments
-- `node`: The XML node representing the track point.
-
-# Returns
-- `TCXTrackPoint` object.
+Parse a TCX `Trackpoint` node, including speed and power stored in separate
+activity-extension `TPX` elements. Missing optional measurements become
+`nothing`. If the timestamp or a present value is malformed, emit a warning
+and return `nothing` so callers can skip that point.
 """
 function parseTCXTrackPoint(node::EzXML.Node)::Union{TCXTrackPoint, Nothing}
     try
-        time = parseDateTime(nodecontent(findfirst(".//g:Time", node, NS_MAP)))
+        time_node = findfirst(".//g:Time", node, NS_MAP)
+        time_node === nothing && throw(ArgumentError("trackpoint is missing Time"))
+        time = parseDateTime(nodecontent(time_node))
 
         latitude = parseOptionalFloat(node, ".//g:Position/g:LatitudeDegrees")
         longitude = parseOptionalFloat(node, ".//g:Position/g:LongitudeDegrees")
@@ -138,23 +164,16 @@ function parseTCXTrackPoint(node::EzXML.Node)::Union{TCXTrackPoint, Nothing}
         altitude_meters = parseOptionalFloat(node, ".//g:AltitudeMeters")
         distance_meters = parseOptionalFloat(node, ".//g:DistanceMeters")
 
-        heart_rate_bpm_node = findfirst(".//g:HeartRateBpm/g:Value", node, NS_MAP)
-        heart_rate_bpm = heart_rate_bpm_node !== nothing ? parseOptionalInt(node, ".//g:HeartRateBpm/g:Value") : nothing
+        heart_rate_bpm = parseOptionalInt(node, ".//g:HeartRateBpm/g:Value")
 
         cadence = parseOptionalInt(node, ".//g:Cadence")
 
-        tpx_node = findfirst(".//ns3:TPX", node, NS_MAP)
-        speed = nothing
-        watts = nothing
+        tpx_nodes = findall(".//ns3:TPX", node, NS_MAP)
+        speed = parseOptionalFloat(node, ".//ns3:TPX/ns3:Speed")
+        watts = parseOptionalInt(node, ".//ns3:TPX/ns3:Watts")
 
-        if tpx_node !== nothing
-            speed_node = findfirst(".//ns3:Speed", tpx_node, NS_MAP)
-            speed = speed_node !== nothing ? parseOptionalFloat(tpx_node, ".//ns3:Speed") : nothing
-
-            watts_node = findfirst(".//ns3:Watts", tpx_node, NS_MAP)
-            watts = watts_node !== nothing ? parseOptionalInt(tpx_node, ".//ns3:Watts") : nothing
-        else
-            @debug "Empty <ns3:TPX> tag found at time $time."
+        if isempty(tpx_nodes)
+            @debug "No <ns3:TPX> extension found at time $time."
         end
 
         return TCXTrackPoint(time, latitude, longitude, altitude_meters, distance_meters, heart_rate_bpm, cadence, speed, watts)
@@ -177,34 +196,30 @@ Parse a build version node into a `BuildVersion` object.
 - `BuildVersion` object.
 """
 function parseBuildVersion(node::EzXML.Node)::BuildVersion
-    versionMajor = parse(Int, nodecontent(findfirst(".//g:VersionMajor", node, NS_MAP)))
-    versionMinor = parse(Int, nodecontent(findfirst(".//g:VersionMinor", node, NS_MAP)))
-    buildMajor = parse(Int, nodecontent(findfirst(".//g:BuildMajor", node, NS_MAP)))
-    buildMinor = parse(Int, nodecontent(findfirst(".//g:BuildMinor", node, NS_MAP)))
+    versionMajor = something(parseOptionalInt(node, ".//g:VersionMajor"), 0)
+    versionMinor = something(parseOptionalInt(node, ".//g:VersionMinor"), 0)
+    buildMajor = something(parseOptionalInt(node, ".//g:BuildMajor"), 0)
+    buildMinor = something(parseOptionalInt(node, ".//g:BuildMinor"), 0)
 
     return BuildVersion(versionMajor, versionMinor, buildMajor, buildMinor)
 end
 
 """
-    parseTCXAuthor(doc::EzXML.Document)
+    parseTCXAuthor(doc::EzXML.Document) -> TCXAuthor
 
-Parse the author information from a TCX document into a `TCXAuthor` object.
-
-# Arguments
-- `doc`: The XML document representing the TCX file.
-
-# Returns
-- `TCXAuthor` object.
+Parse document-level author metadata. A missing author or missing author fields
+use `TCXAuthor()` and `BuildVersion()` defaults; malformed present version
+numbers throw an error.
 """
 function parseTCXAuthor(doc::EzXML.Document)::TCXAuthor
     authorNode = findfirst(".//g:Author", doc.root, NS_MAP)
 
     if authorNode !== nothing
-        name = nodecontent(findfirst(".//g:Name", authorNode, NS_MAP))
+        name = parseOptionalString(authorNode, "./g:Name")
         buildNode = findfirst(".//g:Build", authorNode, NS_MAP)
-        build = buildNode !== nothing ? parseBuildVersion(buildNode) : BuildVersion(0, 0, 0, 0)
-        langID = nodecontent(findfirst(".//g:LangID", authorNode, NS_MAP))
-        partNumber = nodecontent(findfirst(".//g:PartNumber", authorNode, NS_MAP))
+        build = buildNode !== nothing ? parseBuildVersion(buildNode) : BuildVersion()
+        langID = parseOptionalString(authorNode, "./g:LangID")
+        partNumber = parseOptionalString(authorNode, "./g:PartNumber")
 
         return TCXAuthor(name, build, langID, partNumber)
     else
@@ -212,23 +227,11 @@ function parseTCXAuthor(doc::EzXML.Document)::TCXAuthor
     end
 end
 
-"""
-    parseDeviceInfo(doc::EzXML.Document)
-
-Parse the device information from a TCX document into a `DeviceInfo` object.
-
-# Arguments
-- `doc`: The XML document representing the TCX file.
-
-# Returns
-- `DeviceInfo` object.
-"""
-function parseDeviceInfo(doc::EzXML.Document)::DeviceInfo
-    creatorNode = findfirst(".//g:Creator", doc.root, NS_MAP)
+function _parseDeviceInfo(creatorNode::Union{EzXML.Node, Nothing})::DeviceInfo
     if creatorNode !== nothing
-        name = nodecontent(findfirst(".//g:Name", creatorNode, NS_MAP))
-        unitId = nodecontent(findfirst(".//g:UnitId", creatorNode, NS_MAP))
-        productId = parseOptionalInt(creatorNode, ".//g:ProductID")
+        name = parseOptionalString(creatorNode, "./g:Name")
+        unitId = parseOptionalString(creatorNode, "./g:UnitId")
+        productId = something(parseOptionalInt(creatorNode, "./g:ProductID"), 0)
         versionMajor = parseOptionalInt(creatorNode, ".//g:Version/g:VersionMajor")
         versionMinor = parseOptionalInt(creatorNode, ".//g:Version/g:VersionMinor")
         version = versionMajor !== nothing && versionMinor !== nothing ? "$versionMajor.$versionMinor" : ""
@@ -239,16 +242,37 @@ function parseDeviceInfo(doc::EzXML.Document)::DeviceInfo
 end
 
 """
-    exportCSV(author::TCXAuthor, activities::Vector{TCXActivity}, csv_filepath::String)
+    parseDeviceInfo(doc::EzXML.Document) -> DeviceInfo
 
-Export the parsed TCX data to a CSV file.
+Parse the first activity creator in `doc`. Missing creator fields use the
+`DeviceInfo()` defaults; a present but invalid numeric field throws an error.
+`loadTCXFile` parses creators per activity, while this document-level method is
+retained for compatibility.
+"""
+function parseDeviceInfo(doc::EzXML.Document)::DeviceInfo
+    return _parseDeviceInfo(findfirst(".//g:Creator", doc.root, NS_MAP))
+end
+
+"""
+    exportCSV(author::TCXAuthor, activities::Vector{TCXActivity}, csv_filepath::String; io=stdout)
+
+Export parsed TCX trackpoints to a CSV file. Each row represents one
+trackpoint; laps without trackpoints therefore produce no rows. The existing
+column order and missing-value representation are preserved. A completion
+message is written to `io`.
 
 # Arguments
 - `author`: The `TCXAuthor` object containing author information.
 - `activities`: A vector of `TCXActivity` objects representing the activities.
 - `csv_filepath`: The file path where the CSV file will be saved.
+- `io`: The stream used for the completion message.
 """
-function exportCSV(author::TCXAuthor, activities::Vector{TCXActivity}, csv_filepath::String)
+function exportCSV(
+    author::TCXAuthor,
+    activities::Vector{TCXActivity},
+    csv_filepath::String;
+    io::IO=stdout,
+)
     df = DataFrame(
         AuthorName = String[],
         AuthorBuildVersion = String[],
@@ -312,20 +336,25 @@ function exportCSV(author::TCXAuthor, activities::Vector{TCXActivity}, csv_filep
         end
     end
 
-    CSV.write(csv_filepath, df; writeheader=true)
-    println("Exported complete TCX data to $csv_filepath")
+    CSV.write(csv_filepath, df; header=true)
+    println(io, "Exported complete TCX data to $csv_filepath")
 end
 
 """
-    calculate_averages_and_totals(lap_data::Vector{TCXLap})
+    calculate_averages_and_totals(lap_data::Vector{TCXLap}) -> Tuple
 
-Calculate the total values for time, distance, and calories, and average values for other metrics across all laps.
+Calculate activity totals and unweighted trackpoint statistics. The returned
+16-tuple is ordered as:
 
-# Arguments
-- `lap_data`: A vector of `TCXLap` objects representing the laps.
+`(total_time, total_distance, max_speed, total_calories, avg_hr, max_hr,
+avg_cadence_zero_avg_on, avg_cadence_zero_avg_off, max_cadence, avg_speed,
+total_ascent, total_descent, max_altitude, avg_watts_zero_avg_on,
+avg_watts_zero_avg_off, max_watts)`.
 
-# Returns
-- A tuple containing total values for time, distance, calories, ascent, descent, and average values for maximum speed, average heart rate, maximum heart rate, cadence (Zero Averaging ON and OFF), maximum cadence, average speed, max altitude, average watts (Zero Averaging ON and OFF), and max watts.
+Missing cadence and power count as zero in the corresponding "zero averaging
+off" values. Speed uses trackpoint speed rather than lap-level speed fields,
+and elevation changes bridge missing samples and lap boundaries. Empty inputs
+return lap totals with zero for all trackpoint-derived metrics.
 """
 function calculate_averages_and_totals(lap_data::Vector{TCXLap})
 
@@ -405,7 +434,10 @@ end
 """
     loadTCXFile(filepath::String, csv_filepath::Union{String,Nothing}=nothing)
 
-Load a TCX file and parse its contents.
+Load a TCX file and parse its contents. If the document contains no
+`Activities` element, the returned activity vector is empty. Present malformed
+non-trackpoint metadata throws an error; malformed trackpoints are warned about
+and skipped.
 
 # Arguments
 - `filepath`: The path to the TCX file.
@@ -421,25 +453,28 @@ function loadTCXFile(filepath::String, csv_filepath::Union{String,Nothing}=nothi
     activitiesNode = findfirst(".//g:Activities", doc.root, NS_MAP)
     activities = Vector{TCXActivity}()
 
-    for activityNode in findall(".//g:Activity", activitiesNode, NS_MAP)
-        sport = activityNode["Sport"]
-        idNode = findfirst("g:Id", activityNode, NS_MAP)
-        id = idNode !== nothing ? parseDateTime(nodecontent(idNode)) : DateTime(1, 1, 1)
-        lapNodes = findall(".//g:Lap", activityNode, NS_MAP)
-        parsed_laps = [parseTCXLap(lap) for lap in lapNodes]
-        device_info = parseDeviceInfo(doc)
+    if activitiesNode !== nothing
+        for activityNode in findall("./g:Activity", activitiesNode, NS_MAP)
+            sport = haskey(activityNode, "Sport") ? activityNode["Sport"] : ""
+            idNode = findfirst("./g:Id", activityNode, NS_MAP)
+            id = idNode !== nothing ? parseDateTime(nodecontent(idNode)) : DateTime(1, 1, 1)
+            lapNodes = findall("./g:Lap", activityNode, NS_MAP)
+            parsed_laps = [parseTCXLap(lap) for lap in lapNodes]
+            creatorNode = findfirst("./g:Creator", activityNode, NS_MAP)
+            device_info = _parseDeviceInfo(creatorNode)
 
-        # Calculate averages and totals for the activity
-        total_time, total_distance, max_speed, total_calories, avg_hr, max_hr, avg_cadence_zero_avg_on, avg_cadence_zero_avg_off, max_cadence, avg_speed, ascent, descent, max_altitude, avg_watts_zero_avg_on, avg_watts_zero_avg_off, max_watts = calculate_averages_and_totals(parsed_laps)
+            # Calculate averages and totals for the activity
+            total_time, total_distance, max_speed, total_calories, avg_hr, max_hr, avg_cadence_zero_avg_on, avg_cadence_zero_avg_off, max_cadence, avg_speed, ascent, descent, max_altitude, avg_watts_zero_avg_on, avg_watts_zero_avg_off, max_watts = calculate_averages_and_totals(parsed_laps)
 
-        # Create TCXActivity with averages and totals
-        activity = TCXActivity(
-            sport, id, parsed_laps, device_info, total_time, total_distance, max_speed, total_calories, avg_hr, max_hr,
-            avg_cadence_zero_avg_on, avg_cadence_zero_avg_off, max_cadence, avg_speed, ascent, descent, max_altitude,
-            avg_watts_zero_avg_on, avg_watts_zero_avg_off, max_watts
-        )
+            # Create TCXActivity with averages and totals
+            activity = TCXActivity(
+                sport, id, parsed_laps, device_info, total_time, total_distance, max_speed, total_calories, avg_hr, max_hr,
+                avg_cadence_zero_avg_on, avg_cadence_zero_avg_off, max_cadence, avg_speed, ascent, descent, max_altitude,
+                avg_watts_zero_avg_on, avg_watts_zero_avg_off, max_watts
+            )
 
-        push!(activities, activity)
+            push!(activities, activity)
+        end
     end
 
     if csv_filepath !== nothing
@@ -448,5 +483,7 @@ function loadTCXFile(filepath::String, csv_filepath::Union{String,Nothing}=nothi
 
     return parsed_author, activities
 end
+
+include("cli.jl")
 
 end

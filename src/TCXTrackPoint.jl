@@ -37,7 +37,7 @@ struct TCXTrackPoint
 end
 
 function Base.show(io::IO, tp::TCXTrackPoint)
-    print(io, "TCXTrackPoint(time=$(tp.time), latitude=$(tp.latitude), longitude=$(tp.longitude), altitude_meters=$(tp.altitude_meters), distance_meters=$(tp.distance_meters), heart_rate_bpm=$(tp.heart_rate_bpm), cadence=$(tp.cadence), speed=$(tp.speed)), watts=$(tp.watts)")
+    print(io, "TCXTrackPoint(time=$(tp.time), latitude=$(tp.latitude), longitude=$(tp.longitude), altitude_meters=$(tp.altitude_meters), distance_meters=$(tp.distance_meters), heart_rate_bpm=$(tp.heart_rate_bpm), cadence=$(tp.cadence), speed=$(tp.speed), watts=$(tp.watts))")
 end
 
 function Base.:(==)(a::TCXTrackPoint, b::TCXTrackPoint)
@@ -45,4 +45,21 @@ function Base.:(==)(a::TCXTrackPoint, b::TCXTrackPoint)
            a.altitude_meters == b.altitude_meters && a.distance_meters == b.distance_meters &&
            a.heart_rate_bpm == b.heart_rate_bpm && a.cadence == b.cadence && a.speed == b.speed &&
            a.watts == b.watts
+end
+
+function Base.hash(tp::TCXTrackPoint, h::UInt)
+    return hash(
+        (
+            tp.time,
+            tp.latitude,
+            tp.longitude,
+            tp.altitude_meters,
+            tp.distance_meters,
+            tp.heart_rate_bpm,
+            tp.cadence,
+            tp.speed,
+            tp.watts,
+        ),
+        h,
+    )
 end

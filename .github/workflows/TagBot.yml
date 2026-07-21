@@ -1,32 +1,21 @@
 name: TagBot
+
 on:
   issue_comment:
-    types:
-      - created
+    types: [created]
   workflow_dispatch:
-    inputs:
-      lookback:
-        default: 3
+
 permissions:
-  actions: read
-  checks: read
   contents: write
-  deployments: read
-  issues: read
-  discussions: read
-  packages: read
-  pages: read
-  pull-requests: read
-  repository-projects: read
-  security-events: read
-  statuses: read
+
 jobs:
-  TagBot:
+  tag:
     if: github.event_name == 'workflow_dispatch' || github.actor == 'JuliaTagBot'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: JuliaRegistries/TagBot@v1
+      - name: Create package tag and release
+        # Push v0.3.0 manually so tag-triggered docs and container workflows run.
+        uses: JuliaRegistries/TagBot@14d7645453716d7a2f09b1da0504a024f97462a1 # v1.25.10
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          ssh: ${{ secrets.DOCUMENTER_KEY }}
-          # ssh: ${{ secrets.NAME_OF_MY_SSH_PRIVATE_KEY_SECRET }}

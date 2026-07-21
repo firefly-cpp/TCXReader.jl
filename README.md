@@ -10,7 +10,7 @@ TCXReader.jl -- A parser for TCX files
     <a href="https://juliahub.com/ui/Packages/General/TCXReader">
         <img alt="Version" src="https://juliahub.com/docs/General/TCXReader/stable/version.svg">
     </a>
-    <a href="https://github.com/firefly-cpp/TCXReader.jl/blob/master/LICENSE">
+    <a href="https://github.com/firefly-cpp/TCXReader.jl/blob/main/LICENSE">
         <img alt="GitHub License" src="https://img.shields.io/github/license/firefly-cpp/TCXReader.jl.svg">
     </a>
     <img alt="GitHub Commit Activity" src="https://img.shields.io/github/commit-activity/w/firefly-cpp/TCXReader.jl.svg">
@@ -20,23 +20,28 @@ TCXReader.jl -- A parser for TCX files
     <a href="#-detailed-insights">✨ Detailed insights</a> •
     <a href="#-installation">📦 Installation</a> •
     <a href="#-usage">🚀 Usage</a> •
+    <a href="#-command-line-and-docker">🐳 Command line and Docker</a> •
+    <a href="#-documentation">📖 Documentation</a> •
     <a href="#️-datasets">🗃️ Datasets</a> •
     <a href="#-related-packagesframeworks">🔗 Related packages/frameworks</a> •
     <a href="#-license">🔑 License</a>
 </p>
 
-TCXReader.jl is a Julia package designed to simplify the process of reading and processing .tcx files, commonly used by Garmin devices and other GPS-enabled fitness devices to store workout data. This package allows Julia developers and data scientists to easily import, analyze, and transform training data for further analysis and visualization. With support for key TCX data elements such as track points, laps, activities, and device information, TCXReader.jl provides a comprehensive toolset for accessing the rich data captured during workouts.
+TCXReader.jl reads Training Center XML (`.tcx`) workout files produced by Garmin and other fitness devices. It exposes author, device, activity, lap, and track-point data as Julia structs, calculates common activity summaries, and can export track points to CSV. The package API, command-line interface, and container use the same parser.
 
 ## ✨ Detailed insights
-- **TCXReader** is a Julia package that provides a simple interface for reading and processing .tcx files, commonly used by Garmin devices and other GPS-enabled fitness devices to store workout data.
-- **TCXActivity**: Access metadata about the workout, including the activity type, start time, total distance, max speed, average/max heart rate, average/max cadence, average/max watts, total ascent, total descent, and max altitude.
-- **TCXAuthor**: Retrieve information about the author of the workout, including name, build version, language ID, and part number.
-- **TCXLap**: Retrieve information about laps within a workout, including start and end times, total distance, total time, and maximum speed.
-- **TCXTrackPoint**: Access detailed information about each trackpoint in a workout, including time, latitude, longitude, altitude, heart rate, cadence, speed, and watts.
+
+- **TCXAuthor** stores information about the application that created the file, including its name, build version, language, and part number.
+- **TCXActivity** provides the sport, activity timestamp, recording device, laps, and calculated time, distance, heart-rate, cadence, speed, elevation, and power summaries.
+- **TCXLap** stores lap metadata and its ordered track points.
+- **TCXTrackPoint** stores timestamped position, altitude, distance, heart rate, cadence, speed, and power samples. Values absent from the TCX file are represented by `nothing`.
+- Sparse metadata and documents without activities are supported. A malformed individual track point is warned about and skipped so the remaining workout can still be read.
 
 ## 📦 Installation
 
-```
+TCXReader.jl requires Julia 1.10 or later. From the Julia package prompt, run:
+
+```julia
 pkg> add TCXReader
 ```
 
@@ -45,70 +50,56 @@ pkg> add TCXReader
 ```julia
 using TCXReader: loadTCXFile
 
-# Load a TCX file and access its data
-author, activities = loadTCXFile("path/to/your/file.tcx")
+author, activities = loadTCXFile("activity.tcx")
+
+println("Created by: ", author.name)
+for activity in activities
+    println(activity.sport, ": ", activity.total_distance, " m in ",
+            activity.total_time, " s")
+end
 ```
 
-### Basic run example
+Pass a second path to write CSV while loading:
 
 ```julia
-using TCXReader: loadTCXFile
-
-function main()
-    # Load a TCX file and access its data
-    author, activities = loadTCXFile("path/to/your/file.tcx")
-
-    # Display basic information about the workout's author
-    println("Author Information:")
-    println("Name: ", author.name)
-    println("Build Version: ", author.build.versionMajor, ".", author.build.versionMinor)
-    println("Language ID: ", author.langID)
-    println("Part Number: ", author.partNumber)
-
-    # Iterate through each activity in the TCX file
-    for activity in activities
-        println("\nActivity Information:")
-        println("Sport: ", activity.sport)
-        println("ID: ", activity.id)
-        println("Device Name: ", activity.device.name)
-        println("Device Version: ", activity.device.version)
-
-        # Display overall metrics for the activity
-        println("Total Time (seconds): ", activity.total_time)
-        println("Total Distance (meters): ", activity.total_distance)
-        println("Maximum Speed: ", activity.max_speed)
-        println("Total Calories: ", activity.total_calories)
-        println("Average Heart Rate (BPM): ", activity.avg_hr)
-        println("Maximum Heart Rate (BPM): ", activity.max_hr)
-        println("Average Cadence (Zero Averaging ON): ", activity.avg_cadence_zero_avg_on)
-        println("Average Cadence (Zero Averaging OFF): ", activity.avg_cadence_zero_avg_off)
-        println("Max Cadence: ", activity.max_cadence)
-        println("Average Speed: ", activity.avg_speed)
-        println("Total Ascent (meters): ", activity.total_ascent)
-        println("Total Descent (meters): ", activity.total_descent)
-        println("Max Altitude (meters): ", activity.max_altitude)
-        println("Average Watts (Zero Averaging ON): ", activity.avg_watts_zero_avg_on)
-        println("Average Watts (Zero Averaging OFF): ", activity.avg_watts_zero_avg_off)
-        println("Max Watts: ", activity.max_watts)
-
-        # Display information about each lap within the activity
-        println("\nLaps and Track Points:")
-        for (i, lap) in enumerate(activity.laps)
-            println("Lap #$i:")
-            println("\tStart Time: ", lap.startTime)
-            println("\tTotal Time Seconds: ", lap.totalTimeSeconds)
-            println("\tDistance Meters: ", lap.distanceMeters)
-            # Additional lap details here
-        end
-    end
-
-    # Optionally, export the loaded data to a CSV file for further analysis
-    loadTCXFile("path/to/your/file.tcx", "output_path/tcx_data_export.csv")
-end
-
-main()
-
+author, activities = loadTCXFile("activity.tcx", "trackpoints.csv")
 ```
+
+The CSV contains one row per track point and repeats the corresponding author, activity, and lap metadata on each row. Missing optional track-point values become empty cells; laps without track points do not create rows. The column names and order are documented in the [usage guide](https://firefly-cpp.github.io/TCXReader.jl/stable/usage/).
+
+The repository also includes a runnable example for its bundled sample files:
+
+```shell
+julia --project=. examples/reader_demo.jl
+```
+
+## 🐳 Command line and Docker
+
+Run the dependency-free CLI from a checkout:
+
+```shell
+julia --project=. bin/tcxreader.jl activity.tcx
+julia --project=. bin/tcxreader.jl --csv trackpoints.csv activity.tcx
+julia --project=. bin/tcxreader.jl --help
+```
+
+Released images use the CLI as their entrypoint.
+
+```shell
+docker run --rm -v "$PWD:/data:ro" tilenhlis/tcxreader /data/activity.tcx
+docker run --rm -v "$PWD:/data" tilenhlis/tcxreader \
+    --csv /data/trackpoints.csv /data/activity.tcx
+```
+
+To open Julia instead of the CLI, override the entrypoint:
+
+```shell
+docker run --rm -it --entrypoint julia tilenhlis/tcxreader
+```
+
+## 📖 Documentation
+
+The full manual covers [installation and usage](https://firefly-cpp.github.io/TCXReader.jl/stable/usage/), [calculation semantics](https://firefly-cpp.github.io/TCXReader.jl/stable/calculations/), and the [API reference](https://firefly-cpp.github.io/TCXReader.jl/stable/functions/). Release notes are recorded in the [changelog](CHANGELOG.md).
 
 ## 🗃️ Datasets
 
