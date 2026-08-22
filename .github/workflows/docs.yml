@@ -30,7 +30,7 @@ jobs:
           version: '1'
 
       - name: Restore Julia caches
-        uses: julia-actions/cache@a45e8fa8be21c18a06b7177052533149e61e9b38 # v3.1.0
+        uses: julia-actions/cache@a7bed9df697e5d7309d68afe7542a87621a8b6c8 # v3.3.0
 
       - name: Instantiate documentation environment
         run: >-
@@ -69,7 +69,7 @@ jobs:
           version: '1'
 
       - name: Restore Julia caches
-        uses: julia-actions/cache@a45e8fa8be21c18a06b7177052533149e61e9b38 # v3.1.0
+        uses: julia-actions/cache@a7bed9df697e5d7309d68afe7542a87621a8b6c8 # v3.3.0
 
       - name: Instantiate documentation environment
         run: >-
