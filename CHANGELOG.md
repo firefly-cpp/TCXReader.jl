@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+**Changed:**
+
+- Allow CSV 1.x alongside CSV 0.10.7 and later 0.10 releases.
+- Declare compatibility bounds for the test environment, including Aqua.
+- Test the legacy CSV 0.10 branch separately in CI while retaining Julia 1.10 support.
+- Update the Docker runtime to Julia 1.13.3.
+- Check test dependencies and the Docker base image for updates weekly with Dependabot.
+
 ## [v0.3.0](https://github.com/firefly-cpp/TCXReader.jl/tree/v0.3.0) (2026-07-21)
 
 [Full Changelog](https://github.com/firefly-cpp/TCXReader.jl/compare/v0.2.3...v0.3.0)

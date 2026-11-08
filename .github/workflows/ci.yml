@@ -32,6 +32,11 @@ jobs:
             julia-version: '1'
             os: ubuntu-latest
             coverage: true
+          - name: Julia stable / CSV 0.10 / Linux
+            julia-version: '1'
+            csv-version: '0.10'
+            os: ubuntu-latest
+            coverage: false
           - name: Julia stable / macOS
             julia-version: '1'
             os: macos-latest
@@ -52,6 +57,13 @@ jobs:
 
       - name: Restore Julia caches
         uses: julia-actions/cache@a45e8fa8be21c18a06b7177052533149e61e9b38 # v3.1.0
+
+      - name: Select legacy CSV version
+        if: matrix.csv-version == '0.10'
+        run: >-
+          julia --project=. --startup-file=no -e '
+          using Pkg;
+          Pkg.add(PackageSpec(name="CSV", version="0.10"))'
 
       - name: Build package
         uses: julia-actions/julia-buildpkg@e3eb439fad4f9aba7da2667e7510e4a46ebc46e1 # v1

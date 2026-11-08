@@ -189,6 +189,15 @@ end
                 table = CSV.File(csv_path)
                 @test propertynames(table) == expected_columns
                 @test length(table) == 1
+                row = only(table)
+                @test row.ActivitySport == "Biking"
+                @test row.DeviceName == "First Device"
+                @test row.ActivityID == DateTime(2024, 4, 5, 10, 0, 0, 123)
+                @test row.TrackPointTime == DateTime(2024, 4, 5, 10)
+                @test ismissing(row.Latitude)
+                @test ismissing(row.HeartRateBpm)
+                @test row.Speed == 2.5
+                @test row.Watts == 200
             end
         end
     end
