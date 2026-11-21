@@ -1,4 +1,4 @@
-FROM julia:1.13.3-bookworm
+FROM julia:1.13.4-bookworm
 
 ENV JULIA_DEPOT_PATH=/opt/julia-depot \
     JULIA_PROJECT=/app \
